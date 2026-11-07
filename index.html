@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0e1756">
-<meta name="description" content="שבץ־נא בעברית ברוח בונוס של מט״ח: נגד המחשב, בשניים על מכשיר אחד, או עם חבר ברשת.">
-<meta property="og:title" content="בונוס">
-<meta property="og:description" content="בוא נשחק בונוס! שבץ־נא בעברית, ישר מהדפדפן.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='10' fill='%23f4ebd3'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle' font-family='Arial' font-weight='700' fill='%231d1a33'%3E%D7%91%3C/text%3E%3C/svg%3E">
+<meta name="description" content="קו-קרב: משחק מילים בעברית. נגד המחשב, בשניים על מכשיר אחד, או עם חבר ברשת.">
+<meta property="og:title" content="קו-קרב">
+<meta property="og:description" content="בוא נשחק קו-קרב! משחק מילים בעברית, ישר מהדפדפן.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='10' fill='%23f4ebd3'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle' font-family='Arial' font-weight='700' fill='%231d1a33'%3E%D7%A7%3C/text%3E%3C/svg%3E">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
-<title>בונוס</title>
+<title>קו-קרב</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Miriam+Libre:wght@400;700&family=Secular+One&display=swap">
@@ -36,12 +36,15 @@
   --accent-ink: #231c00;
   --alert: #ff6b8b;
   --ok: #6fe3a5;
-  --f-cherry: #e8324f;
-  --f-lemon: #ffd23f;
-  --f-grape: #9b6bff;
-  --f-straw: #ff5470;
-  --f-diamond: #63e3ea;
-  --f-star: #ffae1f;
+  --x-coin: #ffc94a;
+  --x-coin-dark: #b07a12;
+  --x-time: #4fd8c4;
+  --x-frame: #dfe5ff;
+  --x-turn: #7be08f;
+  --x-ask: #ff7ab8;
+  --x-key: #63e3ea;
+  --x-grid: #ff9f43;
+  --x-ink: #241433;
   --display: "Secular One", "Arial Hebrew", "Rubik", sans-serif;
   --body: "Assistant", "Arial Hebrew", "Segoe UI", sans-serif;
   --mono: "Miriam Libre", "Courier New", monospace;
@@ -93,8 +96,10 @@ h3 { font-size: 1.15rem; }
   background: var(--tile); color: var(--tile-ink); font-family: var(--display); font-size: 34px;
   border-radius: 7px; box-shadow: 0 5px 0 var(--tile-edge), 0 8px 14px rgba(0,0,0,.35);
 }
-.logo span:nth-child(odd) { transform: rotate(-3deg); }
-.logo span:nth-child(even) { transform: rotate(2.5deg) translateY(4px); }
+.logo span:nth-of-type(odd) { transform: rotate(-3deg); }
+.logo span:nth-of-type(even) { transform: rotate(2.5deg) translateY(4px); }
+.logo .dash { width: 16px; height: 6px; border-radius: 3px; background: var(--accent); align-self: center; margin-top: 4px; }
+.topbar .logo .dash { width: 10px; height: 4px; }
 .logo small { position: absolute; bottom: 3px; left: 6px; font-family: var(--mono); font-size: 11px; }
 
 /* ---------- menu ---------- */
@@ -165,7 +170,7 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
   font-size: clamp(14px, 3.4vw, 27px); line-height: 1; box-shadow: 0 2px 0 var(--tile-edge); user-select: none;
 }
 .tile .v { position: absolute; bottom: 1px; left: 3px; font-family: var(--mono); font-size: clamp(7px, 1.3vw, 10px); }
-.tile.last { box-shadow: 0 2px 0 var(--tile-edge), inset 0 0 0 2px var(--f-diamond); }
+.tile.last { box-shadow: 0 2px 0 var(--tile-edge), inset 0 0 0 2px var(--x-key); }
 .tile.temp { background: var(--tile-new); box-shadow: 0 2px 0 #d6b84a, inset 0 0 0 2px var(--accent); cursor: grab; }
 .tile.temp.bad { box-shadow: 0 2px 0 #d6b84a, inset 0 0 0 2px var(--alert); }
 
@@ -270,17 +275,17 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
   width: 15px; height: 17px; border-radius: 3px; background: var(--tile-edge);
   box-shadow: inset 0 0 0 2px var(--tile), 0 2px 0 rgba(0,0,0,.25);
 }
-.player.thinking { border-color: var(--f-diamond); }
+.player.thinking { border-color: var(--x-key); }
 .dots i { font-style: normal; animation: blink 1.2s infinite; }
 .dots i:nth-child(2) { animation-delay: .2s; }
 .dots i:nth-child(3) { animation-delay: .4s; }
 @keyframes blink { 0%, 100% { opacity: .2; } 40% { opacity: 1; } }
 .tile.fly {
   position: fixed; z-index: 45; pointer-events: none; margin: 0;
-  font-size: clamp(14px, 3.4vw, 27px); box-shadow: 0 10px 22px rgba(0,0,0,.45), inset 0 0 0 2px var(--f-diamond);
+  font-size: clamp(14px, 3.4vw, 27px); box-shadow: 0 10px 22px rgba(0,0,0,.45), inset 0 0 0 2px var(--x-key);
   backface-visibility: hidden;
 }
-.tile.cpu { background: var(--tile-new); box-shadow: 0 2px 0 var(--tile-edge), inset 0 0 0 2px var(--f-diamond); }
+.tile.cpu { background: var(--tile-new); box-shadow: 0 2px 0 var(--tile-edge), inset 0 0 0 2px var(--x-key); }
 .cell.flash .tile { animation: glow .45s ease-in-out 3 alternate; }
 @keyframes glow { to { background: var(--accent); transform: translateY(-3px); } }
 .float-pts {
@@ -315,16 +320,16 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
   <!-- ===== MENU ===== -->
   <section id="menu">
     <div class="hero">
-      <div class="logo" aria-label="בונוס">
-        <span>ב<small>3</small></span><span>ו<small>1</small></span><span>נ<small>2</small></span><span>ו<small>1</small></span><span>ס<small>6</small></span>
+      <div class="logo" aria-label="קו-קרב">
+        <span>ק<small>7</small></span><span>ו<small>1</small></span><i class="dash"></i><span>ק<small>7</small></span><span>ר<small>5</small></span><span>ב<small>3</small></span>
       </div>
-      <p>שבץ־נא בעברית על לוח של עשר על עשר, עם משבצות בונוס מסביב ללוח: פירות, יהלום וכוכב. ברוח המשחק של מט״ח משנת 1993.</p>
+      <p>משחק מילים בעברית על לוח של עשר על עשר. מסביב ללוח מחכות משבצות אקסטרה: נקודות, תור נוסף, ניקוד כפול ומשחקי מילים קצרים.</p>
     </div>
 
     <div class="modes">
       <div class="mode">
         <h3>נגד המחשב</h3>
-        <p>המחשב לא משחק במשחקי המילים. כשהוא נוחת על משבצת כזאת, הוא מקבל בונוס אחר.</p>
+        <p>המחשב לא משחק במשחקי המילים. כשהוא נוחת על משבצת כזאת, הוא מקבל אקסטרה אחר.</p>
         <label class="label" for="cpu-name">השם שלך</label>
         <input type="text" id="cpu-name" maxlength="14" placeholder="שחקן">
         <div class="row" role="group" aria-label="רמת קושי" id="levels">
@@ -361,12 +366,12 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
         <table class="champs"><tbody id="champs"></tbody></table>
       </div>
       <div class="box">
-        <h3>משבצות הבונוס</h3>
+        <h3>משבצות אקסטרה</h3>
         <div class="legend" id="legend"></div>
       </div>
       <div class="box">
         <h3>איך משחקים</h3>
-        <p class="muted" style="margin:0 0 10px">מניחים אותיות מהמדף על הלוח ויוצרים מילים שמתחברות זו לזו כמו בתשבץ. כל אות שווה נקודות, ומשבצות הבונוס מסביב ללוח מוסיפות הפתעות.</p>
+        <p class="muted" style="margin:0 0 10px">מניחים אותיות מהמדף על הלוח ויוצרים מילים שמתחברות זו לזו כמו בתשבץ. כל אות שווה נקודות, ומשבצות האקסטרה מסביב ללוח מוסיפות הפתעות.</p>
         <button class="btn" id="go-rules">לחוקי המשחק</button>
       </div>
     </div>
@@ -411,7 +416,7 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
     <div class="rules">
       <p>כל שחקן מקבל <b>שמונה אותיות</b>. בכל תור מניחים אותיות בשורה אחת או בטור אחד ויוצרים מילה. מילים אופקיות נקראות מימין לשמאל, ומילים אנכיות מלמעלה למטה.</p>
       <ul>
-        <li>המילה הראשונה חייבת לעבור באחת מארבע משבצות המרכז, ואסור להניח בה אות על משבצת בונוס.</li>
+        <li>המילה הראשונה חייבת לעבור באחת מארבע משבצות המרכז, ואסור להניח בה אות על משבצת אקסטרה.</li>
         <li>כל מילה אחרת צריכה להתחבר למילים שכבר על הלוח, כמו בתשבץ. כל המילים שנוצרות במהלך צריכות להיות תקינות.</li>
         <li>הניקוד של מהלך הוא סכום ערכי האותיות בכל המילים שנוצרו בו. מי שמשתמש בכל שמונה האותיות מקבל עוד 50 נקודות.</li>
         <li>אותיות סופיות לא קיימות כאבנים נפרדות. אות בסוף מילה מוצגת אוטומטית בצורתה הסופית.</li>
@@ -419,8 +424,8 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
         <li><b>ערעור:</b> אם המילון לא מכיר מילה, אפשר לערער. נגד המחשב הערעור מתקבל תמיד. מול שחקן אחר, הוא מחליט אם לקבל אותה.</li>
         <li>אפשר להחליף אותיות עם השקית או לוותר על התור. המשחק נגמר כשהשקית ריקה ואחד השחקנים השתמש בכל האותיות שלו, או אחרי שני סבבים בלי אף מילה. האותיות שנשארו אצל כל שחקן יורדות מהניקוד שלו.</li>
       </ul>
-      <h3>משבצות הבונוס</h3>
-      <p>מסביב ללוח יש שתים־עשרה משבצות בונוס. מי שמניח עליהן אות במילה תקינה מקבל את הבונוס, ואחר כך המשבצת נעלמת. משחקי המילים (תות, יהלום וכוכב) שמורים לבני אדם: כשהמחשב נוחת עליהם, הוא מקבל בונוס מסוג אחר.</p>
+      <h3>משבצות אקסטרה</h3>
+      <p>מסביב ללוח יש שתים־עשרה משבצות אקסטרה. מי שמניח עליהן אות במילה תקינה מקבל את האקסטרה, ואחר כך המשבצת נעלמת. משחקי המילים (סימן שאלה, מפתח ולוח אישי) שמורים לבני אדם: כשהמחשב נוחת עליהם, הוא מקבל אקסטרה מסוג אחר.</p>
       <div class="legend" id="legend2"></div>
       <h3>ערכי האותיות</h3>
       <div class="values" id="values"></div>
@@ -431,7 +436,7 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
   <!-- ===== GAME ===== -->
   <div id="gamewrap" hidden>
     <div class="topbar">
-      <div class="logo" aria-label="בונוס"><span>ב</span><span>ו</span><span>נ</span><span>ו</span><span>ס</span></div>
+      <div class="logo" aria-label="קו-קרב"><span>ק</span><span>ו</span><i class="dash"></i><span>ק</span><span>ר</span><span>ב</span></div>
       <div class="row">
         <span class="label" id="net" aria-live="polite"></span>
         <span class="label" id="mode-label"></span>
@@ -578,7 +583,7 @@ function evaluate(s, dict, placements) {
   const extra = {};
   for (const p of placements) {
     if (s.board[p.i]) { res.error = 'המשבצת תפוסה'; return res; }
-    if (!playable(s, p.i)) { res.error = s.first && cellType(s, p.i) === 'bonus' ? 'במהלך הראשון אסור לשבץ על משבצת בונוס' : 'אי אפשר לשבץ כאן'; return res; }
+    if (!playable(s, p.i)) { res.error = s.first && cellType(s, p.i) === 'bonus' ? 'במהלך הראשון אסור לשבץ על משבצת אקסטרה' : 'אי אפשר לשבץ כאן'; return res; }
     extra[p.i] = p.l;
   }
   const rows = new Set(placements.map(p => (p.i / N) | 0)), cols = new Set(placements.map(p => p.i % N));
@@ -636,7 +641,7 @@ function commit(s, who, placements, ev) {
   s.log.unshift({ who, words: ev.words.map(w => w.word), pts, doubled, bingo: ev.bingo });
   return { pts, doubled, bonuses };
 }
-function pointsBonus() { const opts = [1, 10, 15, 20, 25, 40, 40, 50, 100]; return opts[Math.floor(Math.random() * opts.length)]; }
+function pointsBonus() { const opts = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100]; return opts[Math.floor(Math.random() * opts.length)]; }
 function cpuBonusType() { return ['points', 'future', 'extra'][Math.floor(Math.random() * 3)]; }
 
 function refill(s, who) {
@@ -925,20 +930,20 @@ const store = {
 
 /* ---------- icons ---------- */
 const ICON = {
-  points: '<svg viewBox="0 0 24 24"><path d="M12 3c-1 4-4 7-6.5 9.5M12 3c.5 4 2.5 7 5 9" stroke="#3fa34d" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M12 3c2-1 4 0 5 1-2 1-4 0-5-1z" fill="#3fa34d"/><circle cx="6.5" cy="16" r="4.5" fill="var(--f-cherry)"/><circle cx="17" cy="16.5" r="4.5" fill="var(--f-cherry)"/><circle cx="5" cy="14.5" r="1.2" fill="#fff" opacity=".6"/><circle cx="15.5" cy="15" r="1.2" fill="#fff" opacity=".6"/></svg>',
-  future: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="9" ry="6.5" fill="var(--f-lemon)" transform="rotate(-20 12 13)"/><path d="M3 17l-1.5 1M21 9l1.5-1" stroke="var(--f-lemon)" stroke-width="2.4" stroke-linecap="round"/><path d="M14 6c1-2 3-3 5-3-1 2-3 3-5 3z" fill="#3fa34d"/><ellipse cx="9" cy="11" rx="2.5" ry="1.2" fill="#fff" opacity=".5" transform="rotate(-20 9 11)"/></svg>',
-  extra: '<svg viewBox="0 0 24 24"><path d="M12 2v4" stroke="#3fa34d" stroke-width="1.8" stroke-linecap="round"/><path d="M12 4c2-2 5-2 6 0-2 1-4 1-6 0z" fill="#3fa34d"/><g fill="var(--f-grape)"><circle cx="8" cy="8.5" r="3"/><circle cx="14" cy="8.5" r="3"/><circle cx="11" cy="12.5" r="3"/><circle cx="5.5" cy="12.5" r="2.6"/><circle cx="16.8" cy="12.5" r="2.6"/><circle cx="8.3" cy="16.4" r="2.8"/><circle cx="13.8" cy="16.4" r="2.8"/><circle cx="11" cy="20.2" r="2.5"/></g></svg>',
-  riddle: '<svg viewBox="0 0 24 24"><path d="M12 22C6 18 3.5 13 4.5 9.5 5.5 6 9 6 12 7.5 15 6 18.5 6 19.5 9.5 20.5 13 18 18 12 22z" fill="var(--f-straw)"/><path d="M7 6.5l2.5 1.5L12 5l2.5 3L17 6.5 15 9.5 12 8.5 9 9.5z" fill="#3fa34d"/><g fill="#ffe7a3"><circle cx="9" cy="12" r=".8"/><circle cx="12" cy="11.5" r=".8"/><circle cx="15" cy="12" r=".8"/><circle cx="10.5" cy="15" r=".8"/><circle cx="13.5" cy="15" r=".8"/><circle cx="12" cy="18" r=".8"/></g></svg>',
-  letter: '<svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9z" fill="var(--f-diamond)"/><path d="M2 9h20M6 3l3 6 3-6 3 6 3-6M9 9l3 13 3-13" stroke="#1b6f86" stroke-width="1" fill="none" stroke-linejoin="round"/></svg>',
-  mini: '<svg viewBox="0 0 24 24"><path d="M12 1.8l3.1 6.4 7 .9-5.1 4.9 1.3 7-6.3-3.4-6.3 3.4 1.3-7L1.9 9.1l7-.9z" fill="var(--f-star)" stroke="#a96a00" stroke-width=".8" stroke-linejoin="round"/></svg>',
+  points: '<svg viewBox="0 0 24 24"><path d="M4 14v4c0 1.7 3.6 3 8 3s8-1.3 8-3v-4" fill="var(--x-coin-dark)"/><ellipse cx="12" cy="14" rx="8" ry="3" fill="var(--x-coin)"/><path d="M4 8v4c0 1.7 3.6 3 8 3s8-1.3 8-3V8" fill="var(--x-coin-dark)"/><ellipse cx="12" cy="8" rx="8" ry="3" fill="var(--x-coin)"/><path d="M12 6.4v3.2M10.4 8h3.2" stroke="var(--x-coin-dark)" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  future: '<svg viewBox="0 0 24 24"><path d="M6 2.5h12M6 21.5h12" stroke="var(--x-frame)" stroke-width="2" stroke-linecap="round"/><path d="M7 3.5h10c0 4-3 6-5 8.5 2 2.5 5 4.5 5 8.5H7c0-4 3-6 5-8.5C10 9.5 7 7.5 7 3.5z" fill="none" stroke="var(--x-frame)" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.6 5h6.8c-.6 2.2-2.2 3.6-3.4 5-1.2-1.4-2.8-2.8-3.4-5z" fill="var(--x-time)"/><path d="M12 15.6l4.1 4.4H7.9z" fill="var(--x-time)"/></svg>',
+  extra: '<svg viewBox="0 0 24 24"><path d="M19 12a7 7 0 1 1-2.05-4.95" fill="none" stroke="var(--x-turn)" stroke-width="3" stroke-linecap="round"/><path d="M21 3v7h-7z" fill="var(--x-turn)"/></svg>',
+  riddle: '<svg viewBox="0 0 24 24"><path d="M4 3.5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-5 4v-4H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2z" fill="var(--x-ask)"/><path d="M9.6 8.2a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4" fill="none" stroke="var(--x-ink)" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="15.2" r="1.1" fill="var(--x-ink)"/></svg>',
+  letter: '<svg viewBox="0 0 24 24"><circle cx="7.5" cy="12" r="5.5" fill="var(--x-key)"/><circle cx="7.5" cy="12" r="2.1" fill="var(--ground)"/><path d="M12.5 10.5H22v3h-2v3.5h-3v-3.5h-4.5z" fill="var(--x-key)"/></svg>',
+  mini: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3.5" fill="var(--x-grid)"/><g fill="var(--x-ink)" opacity=".8"><rect x="5" y="5" width="4" height="4" rx=".8"/><rect x="10" y="5" width="4" height="4" rx=".8"/><rect x="10" y="10" width="4" height="4" rx=".8"/><rect x="15" y="10" width="4" height="4" rx=".8"/><rect x="5" y="15" width="4" height="4" rx=".8"/></g><g fill="#fff" opacity=".85"><rect x="15" y="5" width="4" height="4" rx=".8"/><rect x="5" y="10" width="4" height="4" rx=".8"/><rect x="10" y="15" width="4" height="4" rx=".8"/><rect x="15" y="15" width="4" height="4" rx=".8"/></g></svg>',
 };
 const BONUS_INFO = {
-  points: ['דובדבן', 'בונוס נקודות: מ־1 ועד 100 נקודות, בהגרלה'],
-  future: ['לימון', 'בונוס עתידי: הניקוד של המהלך הבא שלך יוכפל'],
-  extra: ['ענבים', 'תור נוסף מיד אחרי המהלך'],
-  riddle: ['תות', 'חידה: תשובה נכונה שווה 40 נקודות'],
-  letter: ['יהלום', 'האות החסרה: מצאו אותה בזמן ותקבלו 100 נקודות'],
-  mini: ['כוכב', 'שבץ־נא אישי: לוח קטן משלך לדקה וחצי, וכל מילה נספרת'],
+  points: ['מטבעות', 'נקודות אקסטרה: בין 5 ל־100 נקודות, בהגרלה'],
+  future: ['שעון חול', 'הניקוד של המהלך הבא שלך יוכפל'],
+  extra: ['חץ חוזר', 'תור נוסף מיד אחרי המהלך'],
+  riddle: ['סימן שאלה', 'חידה: תשובה נכונה שווה 40 נקודות'],
+  letter: ['מפתח', 'האות החסרה: מצאו אותה בזמן ותקבלו 100 נקודות'],
+  mini: ['לוח אישי', 'לוח קטן משלך לדקה וחצי, וכל מילה שתבנו נספרת'],
 };
 
 /* ---------- toast & modal ---------- */
@@ -1115,7 +1120,7 @@ function render() {
     const n = esc(s.players[x.who].name);
     let what;
     if (x.pass) what = 'דילג'; else if (x.exchange != null) what = `החליף ${x.exchange} אותיות`;
-    else if (x.bonus) what = 'בונוס ' + BONUS_INFO[x.bonus][0] + (x.note ? ' · ' + esc(x.note) : '');
+    else if (x.bonus) what = 'אקסטרה: ' + BONUS_INFO[x.bonus][0] + (x.note ? ' · ' + esc(x.note) : '');
     else what = esc(x.words.join(', ')) + (x.doubled ? ' ×2' : '') + (x.bingo ? ' +50' : '');
     return `<li><span><b>${n}</b>: ${what}</span><span>${x.pts ? '+' + x.pts : ''}</span></li>`;
   }).join('') : '<li class="muted">עדיין לא שובצו מילים.</li>';
@@ -1155,7 +1160,7 @@ async function afterRender() {
 function placeAt(i, k) {
   const s = G.s, rack = s.racks[viewSeat()];
   if (!canAct() || s.board[i] || !E.playable(s, i)) {
-    if (s.first && E.cellType(s, i) === 'bonus') toast('במהלך הראשון אסור לשבץ על משבצת בונוס', true);
+    if (s.first && E.cellType(s, i) === 'bonus') toast('במהלך הראשון אסור לשבץ על משבצת אקסטרה', true);
     return false;
   }
   const ex = G.temp.findIndex(t => t.i === i);
@@ -1352,7 +1357,7 @@ async function runBonuses(who, bonuses, human) {
   let extra = false;
   for (const b of bonuses) {
     let type = b.type, note = '';
-    if (!human && E.WORD_GAMES.has(type)) { type = E.cpuBonusType(); note = BONUS_INFO[b.type][0] + ' הפך ל' + BONUS_INFO[type][0]; }
+    if (!human && E.WORD_GAMES.has(type)) { type = E.cpuBonusType(); note = BONUS_INFO[b.type][0] + ' ← ' + BONUS_INFO[type][0]; }
     let pts = 0;
     const name = esc(G.s.players[who].name);
     if (!human) {
@@ -1367,10 +1372,10 @@ async function runBonuses(who, bonuses, human) {
       const result = type === 'points' ? `+${pts} נקודות` : type === 'future' ? 'המהלך הבא שלו שווה כפול' : 'תור נוסף למחשב';
       const swap = E.WORD_GAMES.has(b.type)
         ? `<div class="swap"><span class="from">${ICON[b.type]}</span><span class="arrow">←</span><span class="to">${ICON[type]}</span></div>
-           <p style="margin:0" class="muted">המחשב לא משחק ב${BONUS_INFO[b.type][0]}, אז הבונוס הפך ל${BONUS_INFO[type][0]}.</p>`
+           <p style="margin:0" class="muted">המחשב לא משחק במשחקי מילים, אז קיבל במקום זה ${BONUS_INFO[type][0]}.</p>`
         : `<div class="swap single"><span class="to">${ICON[type]}</span></div>`;
-      await modal(`<div class="label">${name} נחת על ${BONUS_INFO[b.type][0]}!</div>${swap}
-        <div class="big">${result}</div>${pts === 1 ? '<p style="margin:0">דין פרוטה כדין מאה.</p>' : ''}
+      await modal(`<div class="label">${name} נחת על משבצת ${BONUS_INFO[b.type][0]}!</div>${swap}
+        <div class="big">${result}</div>
         <div class="row"><button class="btn primary" data-close="1">המשך</button></div>`, null, { auto: 3800 });
       G.s.scores[who] += pts;
       G.s.log.unshift({ who, bonus: b.type, pts, note });
@@ -1380,16 +1385,15 @@ async function runBonuses(who, bonuses, human) {
     }
     if (type === 'points') {
       pts = E.pointsBonus();
-      await modal(`${ICON.points.replace('<svg', '<svg class="icon"')}<div class="label">בונוס נקודות · ${name}</div><div class="big">+${pts} נקודות</div>
-        ${pts === 1 ? '<p style="margin:0">דין פרוטה כדין מאה.</p>' : ''}
+      await modal(`${ICON.points.replace('<svg', '<svg class="icon"')}<div class="label">נקודות אקסטרה · ${name}</div><div class="big">+${pts} נקודות</div>
         <div class="row"><button class="btn primary" data-close="1">יופי</button></div>`);
     } else if (type === 'future') {
       G.s.future[who] = true;
-      await modal(`${ICON.future.replace('<svg', '<svg class="icon"')}<div class="label">בונוס עתידי · ${name}</div><div class="big">המהלך הבא שווה כפול</div>
+      await modal(`${ICON.future.replace('<svg', '<svg class="icon"')}<div class="label">שעון חול · ${name}</div><div class="big">המהלך הבא שווה כפול</div>
         <div class="row"><button class="btn primary" data-close="1">מעולה</button></div>`);
     } else if (type === 'extra') {
       extra = true;
-      await modal(`${ICON.extra.replace('<svg', '<svg class="icon"')}<div class="label">ענבים · ${name}</div><div class="big">תור נוסף!</div>
+      await modal(`${ICON.extra.replace('<svg', '<svg class="icon"')}<div class="label">חץ חוזר · ${name}</div><div class="big">תור נוסף!</div>
         <div class="row"><button class="btn primary" data-close="1">ממשיכים</button></div>`);
     } else if (type === 'riddle') pts = await riddleGame();
     else if (type === 'letter') pts = await letterGame();
@@ -1455,7 +1459,7 @@ function miniGame() {
   const letters = E.shuffle(pool).slice(0, 14);
   const cells = new Array(R * C).fill(0); // holds index+1 into letters
   let sel = null;
-  return modal(`<div class="row">${ICON.mini.replace('<svg', '<svg class="icon" style="width:40px;height:40px"')}<div><div class="label">שבץ־נא אישי · נשארו <span data-secs>90</span> שניות</div><b>בנו כמה מילים שאפשר. כל מילה תקינה נספרת.</b></div></div>
+  return modal(`<div class="row">${ICON.mini.replace('<svg', '<svg class="icon" style="width:40px;height:40px"')}<div><div class="label">לוח אישי · נשארו <span data-secs>90</span> שניות</div><b>בנו כמה מילים שאפשר. כל מילה תקינה נספרת.</b></div></div>
     <div class="timer"><i></i></div>
     <div class="mini-board" id="mb"></div>
     <div class="ex-rack" id="mr"></div>
@@ -1566,7 +1570,7 @@ function miniGame() {
 /* ---------- computer turn ---------- */
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const REDUCED = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
-const HIT_COLOR = { points: 'var(--f-cherry)', future: 'var(--f-lemon)', extra: 'var(--f-grape)', riddle: 'var(--f-straw)', letter: 'var(--f-diamond)', mini: 'var(--f-star)' };
+const HIT_COLOR = { points: 'var(--x-coin)', future: 'var(--x-time)', extra: 'var(--x-turn)', riddle: 'var(--x-ask)', letter: 'var(--x-key)', mini: 'var(--x-grid)' };
 
 /* a tile leaves the computer's face-down rack and lands on cell i */
 async function flyTile(l, i) {
@@ -1853,7 +1857,7 @@ function enterOnline(code, d) {
 }
 function leaveOnline() {
   if (G && G.online && G.online.off) { G.online.off(); G.online.off = null; }
-  netLabel(''); document.title = 'בונוס';
+  netLabel(''); document.title = 'קו-קרב';
 }
 
 function onRemote(d) {
@@ -1879,7 +1883,7 @@ function onRemote(d) {
   } else render();
   // tab title says when it is your turn, so a background tab can tell you
   const myTurn = d.status === 'playing' && o.mySeats.includes(G.s.turn);
-  document.title = myTurn ? '(תורך) בונוס' : 'בונוס';
+  document.title = myTurn ? '(תורך) קו-קרב' : 'קו-קרב';
   // appeal flow
   const ap = d.appeal;
   if (ap && ap.decision && o.waitingAppeal && o.waitingAppeal.id === ap.id) { const w = o.waitingAppeal; o.waitingAppeal = null; render(); w.resolve(ap.decision === 'yes'); }
@@ -1905,7 +1909,7 @@ async function pushOnline() {
   o.rev++;
   o.doc = Object.assign({}, o.doc, { state: E.pack(s), rev: o.rev, status: s.over ? 'over' : 'playing', appeal: null });
   o.status = o.doc.status;
-  document.title = 'בונוס';
+  document.title = 'קו-קרב';
   const write = () => o.ref.update({ state: JSON.stringify(o.doc.state), rev: o.rev, status: o.doc.status, appeal: null, updatedAt: now() });
   try { await write(); }
   catch (e) {
@@ -1917,7 +1921,7 @@ async function pushOnline() {
 
 function showInvite(code) {
   const link = inviteLink(code);
-  const msg = `בוא נשחק בונוס! ${link}`;
+  const msg = `בוא נשחק קו-קרב! ${link}`;
   modal(`<div class="label">המשחק נפתח</div><div class="big">קוד המשחק</div><div class="code" dir="ltr">${code}</div>
     <p style="margin:0">שלחו לחבר את הקישור. כשהוא ייכנס אליו, המשחק יתחיל. אפשר לסגור את העמוד בינתיים, והמשחק יחכה ב״המשחקים שלי״.</p>
     <input type="text" id="inv-link" readonly value="${esc(link)}" dir="ltr">
@@ -1934,7 +1938,7 @@ function showInvite(code) {
         if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast('הקישור הועתק'), fallback); else fallback();
       };
       const sh = m.querySelector('#inv-share');
-      if (sh) sh.onclick = () => navigator.share({ title: 'בונוס', text: 'בוא נשחק בונוס!', url: link }).catch(() => { });
+      if (sh) sh.onclick = () => navigator.share({ title: 'קו-קרב', text: 'בוא נשחק קו-קרב!', url: link }).catch(() => { });
     });
 }
 
