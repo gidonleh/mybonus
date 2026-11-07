@@ -224,7 +224,7 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
 .wordlist .good { color: var(--ok); }
 
 .toast {
-  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + env(safe-area-inset-top, 0px));
   background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 10px 18px; border-radius: 10px;
   z-index: 60; max-width: calc(100% - 32px); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,.4);
 }
@@ -310,6 +310,141 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
 @keyframes spin-in { from { opacity: 0; transform: scale(.2) rotate(-200deg); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .swap .from, .swap .arrow, .swap .to { opacity: 1 !important; }
+}
+
+/* =========================================================
+   Motion: gentle, quick, and always from a visible resting state.
+   Everything below switches off under prefers-reduced-motion.
+   ========================================================= */
+.screen-in { animation: screen-in .38s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(12px); } }
+
+/* logo tiles drop in one by one, and wobble when touched */
+#menu .logo span { animation: tile-drop .7s cubic-bezier(.3,1.5,.5,1) backwards; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+#menu .logo span:nth-of-type(1) { animation-delay: .05s; }
+#menu .logo span:nth-of-type(2) { animation-delay: .15s; }
+#menu .logo span:nth-of-type(3) { animation-delay: .3s; }
+#menu .logo span:nth-of-type(4) { animation-delay: .4s; }
+#menu .logo span:nth-of-type(5) { animation-delay: .5s; }
+#menu .logo .dash { animation: dash-in .35s .25s cubic-bezier(.3,1.6,.5,1) backwards; }
+#menu .logo span:hover { transform: translateY(-8px) rotate(5deg); }
+@keyframes tile-drop { from { opacity: 0; transform: translateY(-46px) rotate(-14deg) scale(.8); } }
+@keyframes dash-in { from { opacity: 0; transform: scaleX(0); } }
+
+/* buttons and cards feel springy */
+.btn { transition: transform .14s ease, box-shadow .14s ease, filter .18s ease, background-color .2s; }
+@media (hover: hover) {
+  .btn:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.08); }
+  .mode:hover { transform: translateY(-4px); box-shadow: 0 12px 26px rgba(0,0,0,.28); }
+  .rack .tile:not(.sel):hover { transform: translateY(-5px); }
+  .games-list .g:hover { transform: translateX(-3px); }
+}
+.btn:not(:disabled):active { transform: translateY(2px) scale(.98); }
+.mode { transition: transform .22s ease, border-color .22s, box-shadow .22s; }
+.chip { transition: background-color .2s, color .2s, border-color .2s, transform .15s; }
+.chip:active { transform: scale(.94); }
+.games-list .g { transition: transform .18s ease; }
+
+/* pop-ups open with a little bounce; toasts slide up */
+.overlay:not([hidden]) { animation: fade-in .2s ease-out both; }
+.overlay:not([hidden]) .modal { animation: modal-in .34s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(16px) scale(.93); } }
+.modal .icon { animation: icon-pop .6s .1s cubic-bezier(.3,1.7,.5,1) backwards; }
+.modal .big { animation: rise-in .4s .08s ease-out backwards; }
+@keyframes icon-pop { from { opacity: 0; transform: scale(.3) rotate(-25deg); } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } }
+.toast:not([hidden]) { animation: toast-in .32s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -18px) scale(.95); } }
+
+/* the board ripples in from the centre at the start of a game */
+.board.intro .cell { animation: cell-in .45s ease-out backwards; animation-delay: var(--d, 0ms); }
+@keyframes cell-in { from { opacity: 0; transform: scale(.5); } }
+.cell { transition: background-color .2s, box-shadow .2s; }
+.board.placing .cell.in:empty { cursor: pointer; }
+.board.placing .cell.in:empty:hover { background: var(--center); box-shadow: inset 0 0 0 3px var(--accent); }
+
+/* rack: new letters are dealt in, the chosen letter bobs, shuffling wiggles */
+.rack .tile { transition: transform .16s ease, box-shadow .16s ease; }
+.rack .tile.sel { animation: bob 1.2s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(-7px); } 50% { transform: translateY(-11px); } }
+.rack .tile.deal { animation: deal .5s cubic-bezier(.3,1.45,.5,1) backwards; }
+@keyframes deal { from { opacity: 0; transform: translateY(30px) scale(.55) rotate(10deg); } }
+.rack .tile.shuffle { animation: shuffle .42s ease-in-out; }
+@keyframes shuffle { 25% { transform: translateX(7px) rotate(7deg); } 60% { transform: translateX(-6px) rotate(-6deg); } }
+
+/* a wrong move gives a small head-shake instead of just a message */
+.tile.shake, .status.alert { animation: shake .42s ease-in-out; }
+@keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+
+/* whose turn it is glows softly; scores bounce when they go up */
+.player { transition: border-color .3s, box-shadow .3s; }
+.player.active { animation: turn-glow 2.4s ease-in-out infinite; }
+@keyframes turn-glow { 50% { box-shadow: 0 0 20px 2px rgba(255, 210, 63, .25); } }
+.player .score.bump { animation: bump .55s cubic-bezier(.3,1.6,.5,1); transform-origin: right center; }
+@keyframes bump { 40% { transform: scale(1.22); color: var(--accent); } }
+
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 80; }
+
+/* ---------- the thinking character ---------- */
+.status-area { min-height: 70px; width: 100%; display: grid; place-items: center; }
+#thinker-slot { display: flex; justify-content: center; max-width: 100%; }
+.thinker { display: inline-flex; align-items: flex-end; gap: 6px; direction: rtl; max-width: 100%; animation: screen-in .35s ease-out both; }
+.thinker .avatar { width: 54px; height: 54px; flex: none; transform-origin: 50% 90%; animation: head-tilt 3.4s ease-in-out infinite; }
+.thinker .avatar svg { display: block; width: 100%; height: 100%; }
+.thinker .bubble { flex: none; display: flex; align-items: flex-end; gap: 3px; align-self: flex-start; animation: float 2.8s ease-in-out infinite; }
+.thinker .puff { display: block; border-radius: 50%; background: #fff; animation: puff 1.6s ease-in-out infinite; }
+.thinker .p1 { width: 6px; height: 6px; margin-bottom: 2px; }
+.thinker .p2 { width: 10px; height: 10px; margin-bottom: 9px; animation-delay: .25s; }
+.thinker .cloud {
+  position: relative; width: 60px; height: 36px; margin-top: 10px; margin-bottom: 15px; border-radius: 18px; background: #fff;
+  display: grid; place-items: center; box-shadow: 0 5px 12px rgba(0,0,0,.25);
+}
+.thinker .cloud::before, .thinker .cloud::after { content: ""; position: absolute; background: #fff; border-radius: 50%; }
+.thinker .cloud::before { width: 26px; height: 26px; top: -11px; right: 7px; }
+.thinker .cloud::after { width: 19px; height: 19px; top: -7px; left: 10px; }
+.thinker .cloud span {
+  position: absolute; z-index: 1; font-family: var(--display); font-size: 21px; line-height: 1; color: var(--tile-ink);
+  opacity: 0; animation: think-cycle 3.2s infinite;
+}
+.thinker .cloud span:nth-child(2) { animation-delay: .8s; }
+.thinker .cloud span:nth-child(3) { animation-delay: 1.6s; }
+.thinker .cloud span:nth-child(4) { animation-delay: 2.4s; }
+.thinker-text { align-self: center; font-weight: 700; min-width: 0; }
+.thinker .look, .thinker .blink, .thinker .hand { transform-box: fill-box; transform-origin: center; }
+.thinker .look { animation: look 3.4s ease-in-out infinite; }
+.thinker .blink { animation: blink 4.2s infinite; }
+.thinker .hand { animation: tap 1.7s ease-in-out infinite; }
+.thinker .antenna { animation: antenna 1.3s ease-in-out infinite; }
+.thinker.small { animation: none; }
+.thinker.small .avatar { width: 38px; height: 38px; }
+.thinker.small .cloud { width: 46px; height: 28px; margin-bottom: 10px; }
+.thinker.small .cloud span { font-size: 16px; }
+.thinker.small .cloud::before { width: 20px; height: 20px; top: -9px; }
+.thinker.small .cloud::after { width: 14px; height: 14px; top: -5px; }
+.status .thinker, #lobby-msg .thinker { font-weight: 700; }
+.games-list .thinker { margin: 4px 0; color: var(--muted); }
+@keyframes think-cycle {
+  0% { opacity: 0; transform: translateY(7px) scale(.7); }
+  8%, 22% { opacity: 1; transform: none; }
+  30%, 100% { opacity: 0; transform: translateY(-7px) scale(.8); }
+}
+@keyframes float { 50% { transform: translateY(-5px); } }
+@keyframes puff { 50% { transform: scale(1.3); opacity: .7; } }
+@keyframes head-tilt { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes look { 0%, 100% { transform: translate(-1.5px, -2px); } 50% { transform: translate(1.5px, -2.5px); } }
+@keyframes blink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }
+@keyframes tap { 50% { transform: translateY(-2px); } }
+@keyframes antenna { 50% { opacity: .35; } }
+
+@media (max-width: 420px) {
+  .status-area { min-height: 62px; }
+  .thinker .avatar { width: 46px; height: 46px; }
+  .thinker .cloud { width: 50px; height: 30px; }
+  .thinker .cloud span { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thinker .cloud span:nth-child(2) { opacity: 1 !important; transform: none !important; }
 }
 </style>
 
@@ -398,11 +533,11 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
       </div>
       <div class="box">
         <h3>משחקים שמחכים לשחקן</h3>
-        <div class="games-list" id="ol-open"><p class="muted">טוען…</p></div>
+        <div class="games-list" id="ol-open"></div>
       </div>
       <div class="box">
         <h3>המשחקים שלי</h3>
-        <div class="games-list" id="ol-mine"><p class="muted">טוען…</p></div>
+        <div class="games-list" id="ol-mine"></div>
       </div>
     </div>
   </section>
@@ -447,7 +582,10 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
     <div id="game">
       <aside class="side scores" id="players"></aside>
       <main class="center">
-        <div class="status" id="status" aria-live="polite"></div>
+        <div class="status-area">
+          <div class="status" id="status" aria-live="polite"></div>
+          <div id="thinker-slot" aria-live="polite" hidden></div>
+        </div>
         <div class="board" id="board" role="grid" aria-label="לוח המשחק"></div>
         <div class="rack" id="rack" aria-label="האותיות שלך"></div>
         <div class="actions">
@@ -979,9 +1117,95 @@ function timerBar(m, secs, onEnd) {
 }
 const tileHTML = (l, cls = '', glyph) => `<div class="tile ${cls}">${glyph || E.CH(l)}<span class="v">${E.VALUES[l]}</span></div>`;
 
+/* ---------- motion: confetti, score count-up, thinking avatar ---------- */
+function confetti(count = 130) {
+  if (REDUCED) return;
+  const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+  c.width = W * dpr; c.height = H * dpr;
+  const x = c.getContext('2d'); x.scale(dpr, dpr);
+  const cs = getComputedStyle(document.documentElement);
+  const cols = ['--accent', '--x-coin', '--x-time', '--x-turn', '--x-ask', '--x-key', '--x-grid'].map(v => cs.getPropertyValue(v).trim() || '#ffd23f');
+  const ps = Array.from({ length: count }, () => ({
+    x: W / 2 + (Math.random() - .5) * W * .35, y: H * .38, vx: (Math.random() - .5) * 10, vy: -Math.random() * 11 - 4,
+    r: Math.random() * 6, vr: (Math.random() - .5) * .3, w: 6 + Math.random() * 6, h: 4 + Math.random() * 4,
+    c: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  const step = t => {
+    const el = t - t0; x.clearRect(0, 0, W, H);
+    for (const p of ps) {
+      p.vy += .28; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.globalAlpha = Math.max(0, 1 - el / 2800);
+      x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); x.restore();
+    }
+    if (el < 2800) requestAnimationFrame(step); else c.remove();
+  };
+  requestAnimationFrame(step);
+}
+
+// scores glide up to their new value instead of jumping
+let shown = [], scoreRAF = 0;
+function paintScores() {
+  document.querySelectorAll('#players .player').forEach(p => { const el = p.querySelector('.score'), k = +p.dataset.seat; if (el && shown[k] != null) el.textContent = Math.round(shown[k]); });
+}
+function animateScores() {
+  const target = G.s.scores;
+  if (shown.length !== target.length || REDUCED) { shown = target.slice(); paintScores(); return; }
+  if (scoreRAF) return;
+  const tick = () => {
+    const tg = G.s.scores; let moving = false;
+    shown = shown.map((v, k) => { const d = tg[k] - v; if (Math.abs(d) < .6) return tg[k]; moving = true; return v + d * .12 + Math.sign(d) * .3; });
+    paintScores();
+    scoreRAF = moving ? requestAnimationFrame(tick) : 0;
+  };
+  scoreRAF = requestAnimationFrame(tick);
+}
+
+// a little character who thinks while you wait: a robot for the computer, a kid for a friend
+const HAIR = ['#5b3a29', '#2b2b3a', '#c46a2b', '#e2b13c', '#7a4b8f', '#3b6e4f'];
+const hairFor = name => { let h = 0; for (const ch of String(name || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return HAIR[h % HAIR.length]; };
+function faceSVG(kind, hair) {
+  if (kind === 'robot') return `<svg viewBox="0 0 64 64">
+    <line x1="32" y1="5" x2="32" y2="13" stroke="#c9d3ff" stroke-width="3" stroke-linecap="round"/><circle class="antenna" cx="32" cy="5" r="4.2" fill="var(--x-ask)"/>
+    <rect x="4" y="26" width="7" height="13" rx="3.5" fill="#7f93e8"/><rect x="53" y="26" width="7" height="13" rx="3.5" fill="#7f93e8"/>
+    <rect x="9" y="13" width="46" height="40" rx="13" fill="#9fb2ff"/><rect x="15" y="19" width="34" height="23" rx="8" fill="#1d2766"/>
+    <g class="look"><g class="blink"><circle cx="25" cy="30.5" r="4.6" fill="var(--x-key)"/><circle cx="39" cy="30.5" r="4.6" fill="var(--x-key)"/></g></g>
+    <rect x="25" y="45" width="14" height="3.4" rx="1.7" fill="#1d2766"/></svg>`;
+  return `<svg viewBox="0 0 64 64">
+    <circle cx="11" cy="36" r="4.5" fill="#f6c391"/><circle cx="53" cy="36" r="4.5" fill="#f6c391"/>
+    <circle cx="32" cy="35" r="21.5" fill="#ffd9b0"/>
+    <path d="M10.5 33C10 19 19.5 11 32 11s22 8 21.5 22c-3.5-5.5-9-8.5-15-8.5-3 3.6-8.6 5.6-13.8 5.6-5.6 0-9.7-.9-14.2 2.9z" fill="${hair}"/>
+    <g class="look"><g class="blink"><ellipse cx="24.5" cy="37" rx="3" ry="3.6" fill="#2a1b3d"/><ellipse cx="39.5" cy="37" rx="3" ry="3.6" fill="#2a1b3d"/></g></g>
+    <circle cx="19" cy="45" r="3.2" fill="#ff9aa9" opacity=".55"/><circle cx="45" cy="45" r="3.2" fill="#ff9aa9" opacity=".55"/>
+    <path d="M28 48.5q4-2.2 8 0" stroke="#2a1b3d" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle class="hand" cx="45" cy="55" r="6.2" fill="#ffd0a0" stroke="#e5ad78" stroke-width="1.2"/></svg>`;
+}
+function thinkerHTML(kind, text, small, hair) {
+  return `<div class="thinker${small ? ' small' : ''}"><div class="avatar">${faceSVG(kind, hair || HAIR[0])}</div>
+    <div class="bubble" aria-hidden="true"><i class="puff p1"></i><i class="puff p2"></i><div class="cloud"><span>א</span><span>?</span><span>ש</span><span>מ</span></div></div>
+    <div class="thinker-text">${text}</div></div>`;
+}
+// who are we waiting for right now? (null when it's the viewer's move)
+function waitingFor() {
+  const s = G.s;
+  if (s.over || G.statusMsg) return null;
+  if (G.mode === 'cpu') return G.thinking ? { kind: 'robot', text: 'המחשב חושב…' } : null;
+  if (G.mode !== 'online') return null;
+  const o = G.online, other = s.players[o.mySeats.includes(0) ? 1 : 0];
+  if (o.status === 'waiting') return { kind: 'kid', hair: HAIR[1], text: `ממתינים שחבר יצטרף · קוד ${esc(o.code)}` };
+  if (o.waitingAppeal) return { kind: 'kid', hair: hairFor(other.name), text: `${esc(other.name)} מחליט/ה על הערעור…` };
+  if (o.status === 'playing' && !o.mySeats.includes(s.turn)) return { kind: 'kid', hair: hairFor(other.name), text: `${esc(other.name)} חושב/ת…` };
+  return null;
+}
+function busyMsg(el, t) { // a message ending with "…" is progress: show the little thinker with it
+  el.hidden = !t;
+  if (t && t.endsWith('…')) el.innerHTML = thinkerHTML('robot', esc(t), true); else el.textContent = t || '';
+}
+
 /* ---------- screens ---------- */
 function show(id) {
   for (const s of ['menu', 'lobby', 'rules', 'gamewrap']) $(s).hidden = s !== id;
+  const el = $(id); el.classList.remove('screen-in'); void el.offsetWidth; el.classList.add('screen-in');
   window.scrollTo(0, 0);
 }
 let rulesReturn = 'menu';
@@ -1040,6 +1264,9 @@ function enterGame() {
   $('mode-label').textContent = G.mode === 'cpu' ? 'נגד המחשב · ' + ({ easy: 'קל', medium: 'בינוני', hard: 'קשה' }[G.s.players[1].level] || '')
     : G.mode === 'local' ? 'שני שחקנים במכשיר אחד' : 'ברשת · קוד ' + G.online.code;
   G.handoff = G.mode === 'local';
+  shown = G.s.scores.slice(); G.prevScores = G.s.scores.slice();
+  G.dealFrom = G.handoff ? null : 0;
+  const b = $('board'); b.classList.add('intro'); setTimeout(() => b.classList.remove('intro'), 1400);
   render();
   afterRender();
 }
@@ -1076,7 +1303,11 @@ function glyph(i) {
 function render() {
   const s = G.s, board = $('board');
   if (!board.children.length) {
-    for (let i = 0; i < N * N; i++) { const d = document.createElement('div'); d.dataset.i = i; board.appendChild(d); }
+    for (let i = 0; i < N * N; i++) {
+      const d = document.createElement('div'); d.dataset.i = i;
+      d.style.setProperty('--d', Math.round(Math.hypot((i / N | 0) - 5.5, i % N - 5.5) * 45) + 'ms'); // board appears as a ripple from the centre
+      board.appendChild(d);
+    }
   }
   const lastSet = new Set(s.last || []);
   const tempSet = new Map(G.temp.map(t => [t.i, t]));
@@ -1096,14 +1327,24 @@ function render() {
     if (l) html = tileHTML(l, (tempSet.has(i) ? 'temp' + (badCells.has(i) ? ' bad' : '') : '') + (cpuSet.has(i) ? 'cpu' : '') + (lastSet.has(i) && !cpuSet.size ? ' last' : ''), glyph(i));
     el.className = cls; el.innerHTML = html;
   }
+  board.classList.toggle('placing', G.sel != null && canAct());
+  if (G.justPlaced != null) { const t = board.children[G.justPlaced].querySelector('.tile'); if (t) t.classList.add('drop-in'); G.justPlaced = null; }
   // rack
   const seat = viewSeat(), rack = s.racks[seat] || [];
   const usedIdx = new Set(G.temp.map(t => t.k));
   const hide = G.mode === 'local' && G.handoff;
   const rk = $('rack');
   rk.className = 'rack' + (hide ? ' hidden-rack' : '');
-  rk.innerHTML = rack.map((l, k) => usedIdx.has(k) ? '<div class="slot"></div>'
-    : `<div class="tile${G.sel === k ? ' sel' : ''}" data-k="${k}" role="button" tabindex="0" aria-label="${E.CH(l)}, ${E.VALUES[l]} נקודות">${E.CH(l)}<span class="v">${E.VALUES[l]}</span></div>`).join('');
+  const dealFrom = hide ? null : G.dealFrom, shuffling = G.shuffleAnim;
+  rk.innerHTML = rack.map((l, k) => {
+    if (usedIdx.has(k)) return '<div class="slot"></div>';
+    let cls = G.sel === k ? ' sel' : '', st = '';
+    if (dealFrom != null && k >= dealFrom) { cls += ' deal'; st = ` style="animation-delay:${(k - dealFrom) * 70}ms"`; }
+    else if (shuffling) { cls += ' shuffle'; st = ` style="animation-delay:${Math.round(Math.random() * 90)}ms"`; }
+    return `<div class="tile${cls}"${st} data-k="${k}" role="button" tabindex="0" aria-label="${E.CH(l)}, ${E.VALUES[l]} נקודות">${E.CH(l)}<span class="v">${E.VALUES[l]}</span></div>`;
+  }).join('');
+  if (!hide) G.dealFrom = null;
+  G.shuffleAnim = false;
   // players
   $('players').innerHTML = s.players.map((p, k) => {
     const tag = G.mode === 'online' ? (G.online.mySeats.includes(k) ? 'את/ה' : (G.online.status === 'waiting' && k === 1 ? 'ממתינים להצטרפות' : 'יריב')) : (p.kind === 'cpu' ? 'מחשב' : '');
@@ -1112,9 +1353,13 @@ function render() {
     const thinking = isCpu && G.thinking;
     return `<div class="player${s.turn === k && !s.over ? ' active' : ''}${thinking ? ' thinking' : ''}" data-seat="${k}">
       <div class="name"><span class="turn-dot"></span>${esc(p.name)}${s.future[k] ? `<span class="lemon" title="הניקוד של המהלך הבא יוכפל">${ICON.future}</span>` : ''}</div>
-      <div class="score">${s.scores[k]}</div><div class="tag">${thinking ? 'חושב<span class="dots"><i>.</i><i>.</i><i>.</i></span>' : tag}${s.future[k] ? ' · המהלך הבא כפול' : ''}</div>
+      <div class="score">${Math.round(shown[k] != null ? shown[k] : s.scores[k])}</div><div class="tag">${thinking ? 'חושב<span class="dots"><i>.</i><i>.</i><i>.</i></span>' : tag}${s.future[k] ? ' · המהלך הבא כפול' : ''}</div>
       ${isCpu ? `<div class="cpu-rack" aria-label="${backs} אותיות למחשב">${'<i></i>'.repeat(backs)}</div>` : ''}</div>`;
   }).join('') + `<div class="bagline">בשקית: ${s.bag.length} אותיות</div>`;
+  const prev = G.prevScores || s.scores;
+  s.scores.forEach((v, k) => { if (v > (prev[k] || 0)) { const el = document.querySelector(`#players [data-seat="${k}"] .score`); if (el && !REDUCED) el.classList.add('bump'); } });
+  G.prevScores = s.scores.slice();
+  animateScores();
   // log
   $('log').innerHTML = s.log.length ? s.log.map(x => {
     const n = esc(s.players[x.who].name);
@@ -1135,6 +1380,11 @@ function render() {
   else if (G.mode === 'online') st = `התור של ${s.players[s.turn].name}`;
   if (G.statusMsg) { st = G.statusMsg; alert = true; }
   $('status').textContent = st; $('status').className = 'status' + (alert ? ' alert' : '');
+  // while waiting for the other side, a little character thinks instead of a plain line of text
+  const w = waitingFor(), slot = $('thinker-slot');
+  const key = w ? w.kind + '|' + w.text + '|' + (w.hair || '') : '';
+  if (slot.dataset.key !== key) { slot.dataset.key = key; slot.innerHTML = w ? thinkerHTML(w.kind, w.text, false, w.hair) : ''; }
+  slot.hidden = !w; $('status').hidden = !!w;
   for (const id of ['act-play', 'act-recall', 'act-shuffle', 'act-swap', 'act-pass']) $(id).disabled = !act;
   $('act-shuffle').disabled = !rack.length || hide;
   $('act-recall').disabled = !G.temp.length;
@@ -1152,7 +1402,7 @@ async function afterRender() {
     await modal(`<div class="label">העבירו את המכשיר</div><div class="big">התור של ${esc(p.name)}</div>
       <p class="muted" style="margin:0">האותיות של ${esc(p.name)} יופיעו אחרי הלחיצה.</p>
       <div class="row"><button class="btn primary" data-close="1">אני מוכן/ה</button></div>`);
-    G.handoff = false; render();
+    G.handoff = false; G.dealFrom = 0; render();
   }
 }
 
@@ -1168,6 +1418,7 @@ function placeAt(i, k) {
   G.temp = G.temp.filter(t => t.k !== k);
   G.temp.push({ i, k, l: rack[k] });
   G.sel = null; G.statusMsg = ''; G.badCells = [];
+  G.justPlaced = i;
   render();
   return true;
 }
@@ -1279,7 +1530,7 @@ $('act-shuffle').onclick = () => {
   const rack = G.s.racks[viewSeat()];
   const placed = G.temp.map(t => t.k);
   if (placed.length) { G.temp = []; }
-  E.shuffle(rack); G.sel = null; render();
+  E.shuffle(rack); G.sel = null; G.shuffleAnim = true; render();
 };
 $('act-play').onclick = () => playMove();
 $('act-pass').onclick = async () => {
@@ -1307,8 +1558,10 @@ $('act-swap').onclick = async () => {
       m.querySelector('#ex-go').onclick = () => close('go');
     });
   if (res !== 'go') return;
+  const kept = rack.length - Math.min(picked.size, s.bag.length);
   E.exchange(s, who, [...picked].map(k => rack[k]));
   E.endTurn(s, who, false);
+  G.dealFrom = kept;
   await turnDone();
 };
 
@@ -1318,9 +1571,9 @@ async function playMove() {
   const s = G.s, who = s.turn;
   const placements = G.temp.map(t => ({ i: t.i, l: t.l }));
   const ev = E.evaluate(s, DICT, placements);
-  if (!ev.ok) { G.statusMsg = ev.error; render(); toast(ev.error, true); return; }
+  if (!ev.ok) { G.statusMsg = ev.error; render(); shakeTemp(); toast(ev.error, true); return; }
   if (ev.invalid.length) {
-    G.badCells = ev.invalid.flatMap(w => w.cells); render();
+    G.badCells = ev.invalid.flatMap(w => w.cells); render(); shakeTemp();
     const list = ev.invalid.map(w => '«' + w.word + '»').join(', ');
     const appealNote = G.mode === 'cpu' ? 'נגד המחשב, ערעור תמיד מתקבל.' : 'היריב יחליט אם לקבל את המילה.';
     const r = await modal(`<div class="big">${list}</div>
@@ -1331,13 +1584,26 @@ async function playMove() {
     if (!accepted) { G.statusMsg = 'הערעור נדחה. נסו מילה אחרת.'; render(); return; }
   }
   G.busy = true; G.temp = []; G.sel = null; G.badCells = []; G.statusMsg = '';
+  const kept = s.racks[who].length - placements.length;
   const r = E.commit(s, who, placements, ev);
   render();
+  // celebrate the word: its letters light up and the score floats over the board
+  ev.words.forEach(w => w.cells.forEach(i => $('board').children[i].classList.add('flash')));
+  const order = placements.map(p => p.i).sort((a, b) => a - b);
+  floatPoints(order[Math.floor(order.length / 2)], r.pts, true);
+  if (ev.bingo) confetti();
   toast(`${ev.words.map(w => w.word).join(', ')} · +${r.pts}${r.doubled ? ' (כפול!)' : ''}${ev.bingo ? ' · כל שמונה האותיות!' : ''}`);
+  await sleep(REDUCED ? 200 : 750);
   const extra = await runBonuses(who, r.bonuses, true);
   G.busy = false;
   E.endTurn(s, who, extra);
+  G.dealFrom = kept;
   await turnDone();
+}
+
+function shakeTemp() {
+  if (REDUCED) return;
+  document.querySelectorAll('#board .tile.temp').forEach(t => { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); });
 }
 
 async function appeal(who, ev, placements) {
@@ -1360,12 +1626,12 @@ async function runBonuses(who, bonuses, human) {
     if (!human && E.WORD_GAMES.has(type)) { type = E.cpuBonusType(); note = BONUS_INFO[b.type][0] + ' ← ' + BONUS_INFO[type][0]; }
     let pts = 0;
     const name = esc(G.s.players[who].name);
+    // the square lights up first, so everyone sees what was hit
+    const cell = $('board').children[b.i];
+    if (cell) { cell.classList.add('hit'); cell.style.setProperty('--hit', HIT_COLOR[b.type]); }
+    await sleep(human ? 650 : 900);
+    if (cell) cell.classList.remove('hit');
     if (!human) {
-      // the computer's bonus: the square lights up, then a card shows what it won
-      const cell = $('board').children[b.i];
-      if (cell) { cell.classList.add('hit'); cell.style.setProperty('--hit', HIT_COLOR[b.type]); }
-      await sleep(900);
-      if (cell) cell.classList.remove('hit');
       if (type === 'points') pts = E.pointsBonus();
       if (type === 'future') G.s.future[who] = true;
       if (type === 'extra') extra = true;
@@ -1667,6 +1933,8 @@ async function gameOver() {
     champs.push({ name: p.name, score: s.scores[k], mode: modeName });
   });
   champs.sort((a, b) => b.score - a.score); store.set('champs', champs.slice(0, 10));
+  const iWon = G.mode === 'local' || (G.mode === 'cpu' ? w.includes(0) : G.online && w.some(k => G.online.mySeats.includes(k)));
+  if (iWon) confetti(180);
   const r = await modal(`<div class="label">סוף המשחק</div><div class="big">${head}</div>
     <div class="wordlist">${s.players.map((p, k) => `<div><b>${esc(p.name)}</b>: ${s.scores[k]} נקודות</div>`).join('')}</div>
     <div class="row"><button class="btn primary" data-close="again">משחק חדש</button><button class="btn ghost" data-close="menu">לתפריט</button></div>`);
@@ -1699,7 +1967,7 @@ const newCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math
 const cleanName = n => String(n || '').replace(/[<>]/g, '').trim().slice(0, 14);
 const inviteLink = code => location.origin + location.pathname + '#' + code;
 function myName() { const n = cleanName($('ol-name').value) || cleanName(store.get('name', '')) || 'שחקן'; store.set('name', n); return n; }
-function lobbyMsg(t) { $('lobby-msg').hidden = !t; $('lobby-msg').textContent = t || ''; }
+function lobbyMsg(t) { busyMsg($('lobby-msg'), t); }
 function netLabel(t, bad) { const n = $('net'); if (n) { n.textContent = t || ''; n.style.color = bad ? 'var(--alert)' : 'var(--ok)'; } }
 
 FB.ready = (async () => {
@@ -1743,6 +2011,7 @@ $('go-lobby').onclick = () => { show('lobby'); openLobby(); };
 async function openLobby() {
   $('ol-name').value = store.get('name', '') || '';
   lobbyMsg('מתחבר…');
+  $('ol-open').innerHTML = $('ol-mine').innerHTML = thinkerHTML('robot', 'טוען…', true);
   await FB.ready;
   lobbyOff();
   $('lobby-body').hidden = !FB.db;
