@@ -461,6 +461,33 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
 .hint-btn:disabled .count { background: var(--muted); }
 .tile.temp.hinted { box-shadow: 0 2px 0 #d6b84a, inset 0 0 0 2px var(--x-turn), 0 0 14px var(--x-turn); animation: hint-glow 1.3s ease-in-out infinite; }
 @keyframes hint-glow { 50% { box-shadow: 0 2px 0 #d6b84a, inset 0 0 0 2px var(--x-turn), 0 0 4px var(--x-turn); } }
+
+/* ---------- profile ---------- */
+.mini-face { display: inline-block; width: 24px; height: 24px; flex: none; vertical-align: middle; }
+.mini-face svg { display: block; width: 100%; height: 100%; }
+.player .name .mini-face { width: 22px; height: 22px; }
+.profile-chip { position: absolute; top: 14px; left: 54px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; max-width: 46vw; }
+.profile-chip span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-chip .mini-face { width: 28px; height: 28px; }
+.pf-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.pf-avatar { width: 84px; height: 84px; flex: none; border-radius: 50%; background: var(--ground-2); padding: 6px; animation: head-tilt 3.4s ease-in-out infinite; }
+.pf-avatar svg { display: block; width: 100%; height: 100%; }
+.pf-id { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pf-name { font-family: var(--display); font-size: 1.7rem; line-height: 1.2; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch { width: 48px; height: 48px; border-radius: 50%; border: 3px solid transparent; background: var(--ground-2); padding: 4px; transition: transform .15s, border-color .15s; }
+.swatch .mini-face { width: 100%; height: 100%; }
+.swatch[aria-checked="true"] { border-color: var(--accent); transform: scale(1.08); }
+.swatch:hover { transform: scale(1.08); }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--ground-2); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.stat .v { font-family: var(--mono); font-size: 1.35rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pf-login input[type=email] { direction: ltr; text-align: left; }
+@media (max-width: 520px) {
+  .profile-chip { top: 0; }
+  .menu-sound { top: 0; }
+  #menu .hero { padding-top: 56px; }
+}
 </style>
 
 </head>
@@ -583,6 +610,57 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
       <p class="muted">המילון מבוסס על Hspell, מילון האיות העברי החופשי של נדב הראל ודן קניגסברג, וכולל צורות נטויות (ילדים, ספריו, כתבנו) בלי אותיות שימוש בתחילת המילה (ו, ה, ב, ל, מ, ש, כ).</p>
     </div>
   </section>
+
+  <!-- ===== PROFILE ===== -->
+  <section id="profile" class="page" hidden>
+    <div class="topbar">
+      <h2>הפרופיל שלי</h2>
+      <button class="btn ghost" data-back>חזרה לתפריט</button>
+    </div>
+    <p class="status" id="pf-msg" hidden></p>
+
+    <div class="box pf-head">
+      <div class="pf-avatar" id="pf-avatar"></div>
+      <div class="pf-id">
+        <div class="pf-name" id="pf-name-show"></div>
+        <div class="muted" id="pf-who" dir="auto"></div>
+      </div>
+      <button class="btn ghost" id="pf-signout" hidden>התנתקות</button>
+    </div>
+
+    <div class="menu-lower" style="margin-top:0">
+      <div class="box pf-login" id="pf-login-box">
+        <h3 id="pf-login-title">התחברות עם אימייל</h3>
+        <p class="muted" id="pf-login-text" style="margin:0 0 10px">כשמתחברים, המשחקים, הדמות והסטטיסטיקה נשמרים בחשבון, ואפשר להמשיך מכל מכשיר. בלי סיסמה: נשלח לכם קישור במייל.</p>
+        <form id="pf-login-form" novalidate>
+          <label class="label" for="pf-email-in">האימייל שלך</label>
+          <input type="email" id="pf-email-in" dir="ltr" autocomplete="email" inputmode="email" placeholder="name@example.com" maxlength="120">
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="pf-send" type="submit">שלחו לי קישור</button></div>
+        </form>
+        <div id="pf-sent" hidden>
+          <div id="pf-sent-thinker"></div>
+          <p style="margin:6px 0 0">שלחנו קישור ל־<b id="pf-sent-to" dir="ltr"></b>. פתחו את המייל ולחצו על הקישור כדי להתחבר.</p>
+          <p class="muted" style="margin:6px 0 10px">לא הגיע תוך דקה? בדקו בתיקיית הספאם או בקידומי מכירות.</p>
+          <div class="row"><button class="btn" id="pf-resend" type="button">שליחה שוב</button><button class="btn ghost" id="pf-change" type="button">כתובת אחרת</button></div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>השם והדמות</h3>
+        <label class="label" for="pf-name">השם שיופיע במשחק</label>
+        <input type="text" id="pf-name" maxlength="14" placeholder="שחקן">
+        <div class="label" style="margin-top:12px">צבע שיער</div>
+        <div class="swatches" id="pf-hair" role="radiogroup" aria-label="צבע שיער"></div>
+        <div class="row" style="margin-top:12px"><button class="btn primary" id="pf-save">שמירה</button></div>
+      </div>
+
+      <div class="box">
+        <h3>הסטטיסטיקה שלי</h3>
+        <div class="stats" id="pf-stats"></div>
+      </div>
+    </div>
+  </section>
+
 
   <!-- ===== GAME ===== -->
   <div id="gamewrap" hidden>
@@ -1209,10 +1287,11 @@ function waitingFor() {
   if (s.over || G.statusMsg) return null;
   if (G.mode === 'cpu') return G.thinking ? { kind: 'robot', text: 'המחשב חושב…' } : null;
   if (G.mode !== 'online') return null;
-  const o = G.online, other = s.players[o.mySeats.includes(0) ? 1 : 0];
+  const o = G.online, oi = o.mySeats.includes(0) ? 1 : 0, other = s.players[oi];
+  const oHair = (o.hair && o.hair[oi]) || hairFor(other.name);
   if (o.status === 'waiting') return { kind: 'kid', hair: HAIR[1], text: `ממתינים שחבר יצטרף · קוד ${esc(o.code)}` };
-  if (o.waitingAppeal) return { kind: 'kid', hair: hairFor(other.name), text: `${esc(other.name)} מחליט/ה על הערעור…` };
-  if (o.status === 'playing' && !o.mySeats.includes(s.turn)) return { kind: 'kid', hair: hairFor(other.name), text: `${esc(other.name)} חושב/ת…` };
+  if (o.waitingAppeal) return { kind: 'kid', hair: oHair, text: `${esc(other.name)} מחליט/ה על הערעור…` };
+  if (o.status === 'playing' && !o.mySeats.includes(s.turn)) return { kind: 'kid', hair: oHair, text: `${esc(other.name)} חושב/ת…` };
   return null;
 }
 
@@ -1276,7 +1355,7 @@ function busyMsg(el, t) { // a message ending with "…" is progress: show the l
 
 /* ---------- screens ---------- */
 function show(id) {
-  for (const s of ['menu', 'lobby', 'rules', 'gamewrap']) $(s).hidden = s !== id;
+  for (const s of ['menu', 'lobby', 'rules', 'gamewrap', 'profile']) if ($(s)) $(s).hidden = s !== id;
   const el = $(id); el.classList.remove('screen-in'); void el.offsetWidth; el.classList.add('screen-in');
   window.scrollTo(0, 0);
 }
@@ -1424,7 +1503,7 @@ function render() {
     const backs = isCpu ? Math.max(0, s.racks[k].length - (G.ghost || []).length) : 0;
     const thinking = isCpu && G.thinking;
     return `<div class="player${s.turn === k && !s.over ? ' active' : ''}${thinking ? ' thinking' : ''}" data-seat="${k}">
-      <div class="name"><span class="turn-dot"></span>${esc(p.name)}${s.future[k] ? `<span class="lemon" title="הניקוד של המהלך הבא יוכפל">${ICON.future}</span>` : ''}</div>
+      <div class="name"><span class="turn-dot"></span>${G.online && G.online.hair && G.online.hair[k] ? `<span class="mini-face">${faceSVG('kid', G.online.hair[k])}</span>` : ''}${esc(p.name)}${s.future[k] ? `<span class="lemon" title="הניקוד של המהלך הבא יוכפל">${ICON.future}</span>` : ''}</div>
       <div class="score">${Math.round(shown[k] != null ? shown[k] : s.scores[k])}</div><div class="tag">${thinking ? 'חושב<span class="dots"><i>.</i><i>.</i><i>.</i></span>' : tag}${s.future[k] ? ' · המהלך הבא כפול' : ''}</div>
       ${isCpu ? `<div class="cpu-rack" aria-label="${backs} אותיות למחשב">${'<i></i>'.repeat(backs)}</div>` : ''}</div>`;
   }).join('') + `<div class="bagline">בשקית: ${s.bag.length} אותיות</div>`;
@@ -2039,6 +2118,10 @@ async function gameOver() {
   const iWon = G.mode === 'local' || (G.mode === 'cpu' ? w.includes(0) : G.online && w.some(k => G.online.mySeats.includes(k)));
   if (iWon) confetti(180);
   SFX.play(iWon ? 'win' : 'lose');
+  if (typeof onGameFinished === 'function' && G.mode !== 'local') {
+    onGameFinished({ s, mySeats: G.mode === 'cpu' ? [0] : G.online.mySeats.slice(), vsCpu: G.mode === 'cpu',
+      key: G.mode === 'online' ? G.online.code : 'cpu-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
+  }
   const r = await modal(`<div class="label">סוף המשחק</div><div class="big">${head}</div>
     <div class="wordlist">${s.players.map((p, k) => `<div><b>${esc(p.name)}</b>: ${s.scores[k]} נקודות</div>`).join('')}</div>
     <div class="row"><button class="btn primary" data-close="again">משחק חוזר</button>${G.mode === 'online' ? '<button class="btn" data-close="lobby">ללובי</button>' : ''}<button class="btn ghost" data-close="menu">לתפריט</button></div>`);
@@ -2075,6 +2158,9 @@ function myName() { const n = cleanName($('ol-name').value) || cleanName(store.g
 function lobbyMsg(t) { busyMsg($('lobby-msg'), t); }
 function netLabel(t, bad) { const n = $('net'); if (n) { n.textContent = t || ''; n.style.color = bad ? 'var(--alert)' : 'var(--ok)'; } }
 
+// Identity: every visitor starts as an anonymous guest. Signing in with an email link upgrades that same
+// guest account (so its games stay), or switches to the email's existing account on a new device.
+const EMAIL_KEY = 'kk.emailForSignIn';
 FB.ready = (async () => {
   const cfg = window.FIREBASE_CONFIG;
   if (typeof firebase === 'undefined') { FB.error = 'רכיב Firebase לא נטען. בדקו את החיבור לאינטרנט ורעננו את העמוד.'; return; }
@@ -2085,8 +2171,16 @@ FB.ready = (async () => {
       firebase.auth().useEmulator('http://127.0.0.1:9099');
       firebase.database().useEmulator('127.0.0.1', 9000);
     }
-    const cred = await firebase.auth().signInAnonymously();
-    FB.uid = cred.user.uid;
+    const auth = firebase.auth();
+    auth.languageCode = 'he'; // the sign-in email arrives in Hebrew
+    let user = await new Promise(res => { const un = auth.onAuthStateChanged(u => { un(); res(u); }); });
+    if (auth.isSignInWithEmailLink(location.href)) {
+      const email = localStorageGet(EMAIL_KEY);
+      if (email) { await finishEmailLink(email); return; } // reloads the page when done
+      FB.pendingLink = location.href; // opened on another device: ask for the address once more
+    }
+    if (!user) user = (await auth.signInAnonymously()).user;
+    FB.user = user; FB.uid = user.uid;
     FB.db = firebase.database();
   } catch (e) {
     FB.error = (e && e.code === 'auth/operation-not-allowed' || e && e.code === 'auth/admin-restricted-operation')
@@ -2094,6 +2188,201 @@ FB.ready = (async () => {
       : 'לא הצלחנו להתחבר ל־Firebase. בדקו את הפרטים בקובץ firebase-config.js ואת החיבור לאינטרנט.';
   }
 })();
+function localStorageGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function localStorageSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { } }
+function cleanUrl() { return location.origin + location.pathname; }
+// The database keeps only a one-way fingerprint of each signed-up address (never the address itself),
+// so a device can tell "this email already has an account" before using the one-time link.
+async function emailKey(email) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ko-krav:' + email.trim().toLowerCase()));
+  return Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('').slice(0, 40);
+}
+async function finishEmailLink(email) {
+  const auth = firebase.auth(), href = FB.pendingLink || location.href, db = firebase.database();
+  const key = await emailKey(email);
+  let exists = localStorageGet('kk.hasAccount:' + key) === '1';
+  if (!exists && auth.currentUser) { try { exists = (await db.ref('emails/' + key).once('value')).exists(); } catch (e) { } }
+  const cred = firebase.auth.EmailAuthProvider.credentialWithLink(email, href);
+  const cur = auth.currentUser;
+  const fail = (why) => { try { sessionStorage.setItem('kk.signinError', why); } catch (x) { } location.replace(cleanUrl()); };
+  try {
+    if (cur && cur.isAnonymous && !exists) await cur.linkWithCredential(cred); // a new account: the guest's games come along
+    else await auth.signInWithEmailLink(email, href);                             // an existing account on this device
+  } catch (e) {
+    const c = e && e.code;
+    if (c === 'auth/email-already-in-use' || c === 'auth/credential-already-in-use') {
+      // the address had an account we didn't know about; that link is used up, so send a fresh one
+      localStorageSet('kk.hasAccount:' + key, '1');
+      try { await auth.sendSignInLinkToEmail(email, { url: cleanUrl() + '?signin=1', handleCodeInApp: true }); localStorageSet(EMAIL_KEY, email); fail('resent'); }
+      catch (x) { localStorageSet(EMAIL_KEY, null); fail('failed'); }
+      return;
+    }
+    localStorageSet(EMAIL_KEY, null);
+    fail(c === 'auth/invalid-action-code' || c === 'auth/expired-action-code' ? 'expired' : 'failed');
+    return;
+  }
+  try { await auth.currentUser.getIdToken(true); await db.ref('emails/' + key).set(auth.currentUser.uid); } catch (e) { }
+  localStorageSet('kk.hasAccount:' + key, '1');
+  localStorageSet(EMAIL_KEY, null);
+  try { sessionStorage.setItem('kk.justSignedIn', '1'); } catch (x) { }
+  location.replace(cleanUrl());
+}
+
+/* ---------- profile ---------- */
+const HAIR_CHOICES = ['#5b3a29', '#2b2b3a', '#c46a2b', '#e2b13c', '#7a4b8f', '#3b6e4f', '#d94f70', '#3a6fd8'];
+FB.profile = null;
+const profRef = uid => FB.db.ref('profiles/' + uid);
+async function loadProfile() {
+  await FB.ready; if (!FB.db) return null;
+  try { FB.profile = (await profRef(FB.uid).once('value')).val() || {}; } catch (e) { FB.profile = {}; }
+  if (FB.profile.name) {
+    store.set('name', FB.profile.name);
+    for (const id of ['cpu-name', 'ol-name']) { const el = $(id); if (el && !el.value) el.value = FB.profile.name; }
+  }
+  paintChip();
+  return FB.profile;
+}
+const myHair = () => (FB.profile && FB.profile.hair) || hairFor(store.get('name', ''));
+function paintChip() {
+  let chip = $('profile-chip');
+  if (!chip) {
+    chip = document.createElement('button'); chip.id = 'profile-chip'; chip.className = 'btn ghost profile-chip'; chip.type = 'button';
+    chip.onclick = () => openProfile();
+    const hero = document.querySelector('#menu .hero'); if (hero) hero.appendChild(chip);
+  }
+  const signed = FB.user && !FB.user.isAnonymous;
+  const name = (FB.profile && FB.profile.name) || store.get('name', '');
+  chip.innerHTML = `<span class="mini-face">${faceSVG('kid', myHair())}</span><span>${signed ? esc(name || 'הפרופיל שלי') : 'התחברות'}</span>`;
+  chip.setAttribute('aria-label', signed ? 'הפרופיל שלי' : 'התחברות ופרופיל');
+}
+let pfHair = null;
+async function openProfile(msg) {
+  show('profile');
+  busyMsg($('pf-msg'), 'טוען…');
+  await loadProfile();
+  if (!FB.db) { busyMsg($('pf-msg'), FB.error); return; }
+  busyMsg($('pf-msg'), msg || '');
+  const p = FB.profile || {}, signed = FB.user && !FB.user.isAnonymous;
+  pfHair = p.hair || myHair();
+  $('pf-name').value = p.name || store.get('name', '') || '';
+  paintProfileHead();
+  $('pf-signout').hidden = !signed;
+  $('pf-login-box').hidden = signed && !FB.pendingLink;
+  $('pf-sent').hidden = true; $('pf-login-form').hidden = false;
+  if (FB.pendingLink) {
+    $('pf-login-title').textContent = 'עוד צעד אחד';
+    $('pf-login-text').textContent = 'פתחתם את הקישור במכשיר אחר מזה שביקש אותו. הזינו שוב את האימייל כדי לסיים את ההתחברות.';
+    $('pf-send').textContent = 'סיום ההתחברות';
+  }
+  $('pf-hair').innerHTML = HAIR_CHOICES.map(c => `<button type="button" class="swatch" role="radio" aria-checked="${c === pfHair}" aria-label="צבע ${c}" data-c="${c}" style="--sw:${c}"><span class="mini-face">${faceSVG('kid', c)}</span></button>`).join('');
+  renderStats(p.stats || {});
+}
+function paintProfileHead() {
+  const signed = FB.user && !FB.user.isAnonymous;
+  $('pf-avatar').innerHTML = faceSVG('kid', pfHair);
+  $('pf-name-show').textContent = cleanName($('pf-name').value) || 'שחקן';
+  $('pf-who').textContent = signed ? FB.user.email : 'אורח: המשחקים נשמרים רק בדפדפן הזה';
+}
+function renderStats(st) {
+  const games = st.games || 0, wins = st.wins || 0;
+  const pct = games ? Math.round(100 * wins / games) + '%' : '–';
+  const best = st.bestMove ? `${esc(st.bestMove.word)} <span class="muted">+${st.bestMove.pts}</span>` : '–';
+  const tiles = [
+    ['משחקים', games], ['ניצחונות', wins], ['אחוז ניצחון', pct],
+    ['ניצחונות נגד המחשב', st.cpuWins || 0], ['ניצחונות ברשת', st.onlineWins || 0], ['שיא במשחק', st.best || 0],
+    ['מילים ששובצו', st.words || 0], ['המהלך הכי טוב', best],
+  ];
+  $('pf-stats').innerHTML = games ? tiles.map(([k, v]) => `<div class="stat"><div class="label">${k}</div><div class="v">${v}</div></div>`).join('')
+    : '<p class="muted" style="margin:0">עוד אין נתונים. סיימו משחק נגד המחשב או ברשת, והסטטיסטיקה תופיע כאן.</p>';
+}
+$('pf-hair') && ($('pf-hair').onclick = e => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  pfHair = b.dataset.c; SFX.play('pick');
+  $('pf-hair').querySelectorAll('[data-c]').forEach(x => x.setAttribute('aria-checked', x.dataset.c === pfHair));
+  paintProfileHead();
+});
+$('pf-name') && $('pf-name').addEventListener('input', paintProfileHead);
+$('pf-save') && ($('pf-save').onclick = async () => {
+  await FB.ready; if (!FB.db) return;
+  const name = cleanName($('pf-name').value) || 'שחקן';
+  try {
+    await profRef(FB.uid).update({ name, hair: pfHair });
+    FB.profile = Object.assign(FB.profile || {}, { name, hair: pfHair });
+    store.set('name', name); paintChip(); SFX.play('word'); toast('נשמר');
+  } catch (e) { toast('השמירה נכשלה. נסו שוב.', true); }
+});
+const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+async function sendLink(email) {
+  await FB.ready;
+  try {
+    await firebase.auth().sendSignInLinkToEmail(email, { url: cleanUrl() + '?signin=1', handleCodeInApp: true });
+    localStorageSet(EMAIL_KEY, email);
+    $('pf-login-form').hidden = true; $('pf-sent').hidden = false; $('pf-sent-to').textContent = email;
+    $('pf-sent-thinker').innerHTML = thinkerHTML('kid', 'בדקו את תיבת המייל…', true, pfHair || myHair());
+    SFX.play('hint');
+  } catch (e) {
+    const c = e && e.code;
+    toast(c === 'auth/unauthorized-continue-uri' || c === 'auth/unauthorized-domain' ? 'צריך להוסיף את כתובת האתר לרשימת הדומיינים המורשים ב־Firebase.'
+      : c === 'auth/operation-not-allowed' ? 'צריך להפעיל ב־Firebase התחברות עם קישור במייל.'
+      : c === 'auth/quota-exceeded' ? 'נשלחו יותר מדי מיילים היום. נסו שוב מחר.'
+      : 'לא הצלחנו לשלוח את המייל. בדקו את הכתובת ונסו שוב.', true);
+  }
+}
+$('pf-login-form') && ($('pf-login-form').onsubmit = async e => {
+  e.preventDefault();
+  const email = $('pf-email-in').value.trim();
+  if (!validEmail(email)) { toast('הכתובת לא נראית תקינה', true); $('pf-email-in').focus(); return; }
+  if (FB.pendingLink) { busyMsg($('pf-msg'), 'מתחבר…'); await finishEmailLink(email); return; }
+  sendLink(email);
+});
+$('pf-resend') && ($('pf-resend').onclick = () => { const e = localStorageGet(EMAIL_KEY); if (e) sendLink(e); });
+$('pf-change') && ($('pf-change').onclick = () => { $('pf-sent').hidden = true; $('pf-login-form').hidden = false; $('pf-email-in').focus(); });
+$('pf-signout') && ($('pf-signout').onclick = async () => {
+  const ok = await modal(`<div class="big">להתנתק?</div><p class="muted" style="margin:0">המשחקים והסטטיסטיקה נשארים בחשבון. כדי לחזור אליהם, מתחברים שוב עם אותו אימייל.</p>
+    <div class="row"><button class="btn primary" data-close="yes">התנתקות</button><button class="btn ghost" data-close="">ביטול</button></div>`);
+  if (ok !== 'yes') return;
+  leaveOnline(); store.del('name');
+  await firebase.auth().signOut();
+  location.replace(cleanUrl());
+});
+
+/* every finished game (against the computer or online) adds to the player's stats, once */
+async function onGameFinished({ s, mySeats, key, vsCpu }) {
+  await FB.ready; if (!FB.db || !mySeats.length) return;
+  const k = mySeats[0], winners = s.winners || [];
+  const won = winners.length === 1 && winners[0] === k;
+  let best = null, words = 0;
+  for (const x of s.log) if (x.who === k && x.words) { words += x.words.length; if (!best || x.pts > best.pts) best = { word: x.words[0], pts: x.pts }; }
+  const ref = profRef(FB.uid);
+  try {
+    if ((await ref.child('counted/' + key).once('value')).exists()) return;
+    await ref.child('counted/' + key).set(true);
+    await ref.child('stats').transaction(st => {
+      st = st || {};
+      st.games = (st.games || 0) + 1;
+      if (won) { st.wins = (st.wins || 0) + 1; if (vsCpu) st.cpuWins = (st.cpuWins || 0) + 1; else st.onlineWins = (st.onlineWins || 0) + 1; }
+      st.best = Math.max(st.best || 0, s.scores[k]);
+      st.words = (st.words || 0) + words;
+      if (best && (!st.bestMove || best.pts > st.bestMove.pts)) st.bestMove = best;
+      return st;
+    });
+  } catch (e) { }
+}
+
+/* boot: show the chip, and finish what an email link started */
+setTimeout(async () => {
+  let note = '';
+  try {
+    if (sessionStorage.getItem('kk.justSignedIn')) { sessionStorage.removeItem('kk.justSignedIn'); note = 'in'; }
+    const err = sessionStorage.getItem('kk.signinError'); if (err) { sessionStorage.removeItem('kk.signinError'); note = err; }
+  } catch (e) { }
+  await loadProfile();
+  if (note === 'in') { openProfile(); toast('התחברת! ברוך הבא'); SFX.play('win'); confetti(90); }
+  else if (note === 'expired') openProfile('הקישור כבר לא בתוקף. שלחו קישור חדש.');
+  else if (note === 'failed') openProfile('ההתחברות לא הצליחה. נסו לשלוח קישור חדש.');
+  else if (note === 'resent') openProfile('לכתובת הזאת כבר יש חשבון. שלחנו קישור חדש: לחצו עליו כדי להיכנס.');
+  else if (FB.pendingLink) openProfile();
+}, 0);
 const gameRef = code => FB.db.ref('games/' + code);
 const now = () => firebase.database.ServerValue.TIMESTAMP;
 function readDoc(v) { // database value -> the shape the game code uses
@@ -2208,8 +2497,9 @@ function enterOnline(code, d) {
   lobbyOff(); leaveOnline();
   G = fresh('online', E.unpack(d.state));
   const ref = gameRef(code);
-  G.online = { code, ref, doc: d, rev: d.rev, status: d.status, mySeats: seatsOf(d), waitingAppeal: null, appealShown: null };
+  G.online = { code, ref, doc: d, rev: d.rev, status: d.status, mySeats: seatsOf(d), waitingAppeal: null, appealShown: null, hair: [null, null] };
   enterGame();
+  loadHair(G.online, d);
   try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch (e) { }
   const onVal = snap => { const nd = readDoc(snap.val()); if (nd) onRemote(nd); };
   ref.on('value', onVal, () => netLabel('אין גישה למשחק', true));
@@ -2229,6 +2519,13 @@ function enterOnline(code, d) {
   pres.on('value', onPres);
   G.online.off = () => { ref.off('value', onVal); conn.off('value', onConn); pres.off('value', onPres); me.remove().catch(() => { }); me.onDisconnect().cancel(); };
 }
+function loadHair(o, d) { // each player's chosen avatar, shown on the cards and while they think
+  d.seats.forEach((u, k) => {
+    if (!u || o.hair[k]) return;
+    if (u === FB.uid) { o.hair[k] = myHair(); return; }
+    profRef(u).child('hair').once('value').then(v => { if (v.val() && G && G.online === o) { o.hair[k] = v.val(); render(); } }).catch(() => { });
+  });
+}
 function leaveOnline() {
   if (G && G.online && G.online.off) { G.online.off(); G.online.off = null; }
   netLabel(''); document.title = 'קו-קרב';
@@ -2239,6 +2536,7 @@ function onRemote(d) {
   const o = G.online;
   const wasWaiting = o.status === 'waiting';
   o.doc = d; o.status = d.status; o.mySeats = seatsOf(d);
+  loadHair(o, d);
   if (d.rev > o.rev && !G.busy) {
     const prevMoves = G.s.moveNo;
     o.rev = d.rev; G.s = E.unpack(d.state); G.temp = []; G.sel = null;

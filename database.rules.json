@@ -1,0 +1,65 @@
+{
+  "rules": {
+    "games": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "status"
+      ],
+      "$code": {
+        ".write": "auth != null && (!data.exists() ? newData.child('seats/0').val() === auth.uid : (data.child('seats/0').val() === auth.uid || data.child('seats/1').val() === auth.uid || (!data.child('seats/1').exists() && newData.child('seats/1').val() === auth.uid && newData.child('seats/0').val() === data.child('seats/0').val())))",
+        ".validate": "newData.hasChildren(['code', 'status', 'seats', 'state', 'rev']) && newData.child('code').val() === $code && newData.child('state').isString() && newData.child('state').val().length < 20000"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "games": {
+          ".indexOn": ".value",
+          "$code": {
+            ".write": "auth != null && (auth.uid === $uid || ((root.child('games').child($code).child('seats/0').val() === auth.uid || root.child('games').child($code).child('seats/1').val() === auth.uid) && (root.child('games').child($code).child('seats/0').val() === $uid || root.child('games').child($code).child('seats/1').val() === $uid)))",
+            ".validate": "newData.isNumber()"
+          }
+        }
+      }
+    },
+    "presence": {
+      "$code": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isBoolean()"
+        }
+      }
+    },
+    "profiles": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 14"
+        },
+        "hair": {
+          ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-fA-F]{6}$/)"
+        },
+        "stats": {
+          ".validate": "newData.hasChildren(['games'])"
+        },
+        "counted": {
+          "$key": {
+            ".validate": "newData.isBoolean()"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "emails": {
+      "$key": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.email != null && !data.exists()",
+        ".validate": "newData.val() === auth.uid && $key.length === 40"
+      }
+    }
+  }
+}
