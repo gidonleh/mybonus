@@ -488,6 +488,8 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
   .menu-sound { top: 0; }
   #menu .hero { padding-top: 56px; }
 }
+
+.spam-tip { margin: 10px 0 12px; padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 14%, var(--ground-2)); border-inline-start: 4px solid var(--accent); line-height: 1.55; overflow-wrap: anywhere; }
 </style>
 
 </head>
@@ -640,7 +642,9 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
         <div id="pf-sent" hidden>
           <div id="pf-sent-thinker"></div>
           <p style="margin:6px 0 0">שלחנו קישור ל־<b id="pf-sent-to" dir="ltr"></b>. פתחו את המייל ולחצו על הקישור כדי להתחבר.</p>
-          <p class="muted" style="margin:6px 0 10px">לא הגיע תוך דקה? בדקו בתיקיית הספאם או בקידומי מכירות.</p>
+          <div class="spam-tip">
+            <b>לא רואים את המייל?</b> בפעם הראשונה הוא נוחת הרבה פעמים ב<b>ספאם</b> או ב״קידומי מכירות״. המייל מגיע מ־<span dir="ltr">noreply@tavkrav.firebaseapp.com</span>. אם הוא שם, סמנו <b>״לא ספאם״</b>, וכך הבאים יגיעו לדואר הנכנס.
+          </div>
           <div class="row"><button class="btn" id="pf-resend" type="button">שליחה שוב</button><button class="btn ghost" id="pf-change" type="button">כתובת אחרת</button></div>
         </div>
       </div>
