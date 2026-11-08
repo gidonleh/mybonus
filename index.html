@@ -270,11 +270,13 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
 .drag-ghost.finger { transform: translate(-50%, -125%) scale(1.15); }
 
 /* ---------- the computer's turn ---------- */
-.cpu-rack { display: flex; gap: 3px; margin-top: 6px; direction: rtl; min-height: 18px; }
-.cpu-rack i {
-  width: 15px; height: 17px; border-radius: 3px; background: var(--tile-edge);
-  box-shadow: inset 0 0 0 2px var(--tile), 0 2px 0 rgba(0,0,0,.25);
+.opp-rack { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 8px; direction: rtl; min-height: 24px; }
+.mini-tile {
+  position: relative; width: 22px; height: 24px; border-radius: 4px; display: grid; place-items: center;
+  background: var(--tile); color: var(--tile-ink); font-family: var(--display); font-size: 14px; line-height: 1;
+  box-shadow: 0 2px 0 var(--tile-edge); transition: transform .2s;
 }
+.mini-tile small { position: absolute; bottom: 0; left: 2px; font-family: var(--mono); font-size: 7px; }
 .player.thinking { border-color: var(--x-key); }
 .dots i { font-style: normal; animation: blink 1.2s infinite; }
 .dots i:nth-child(2) { animation-delay: .2s; }
@@ -612,6 +614,7 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
         <li>אותיות סופיות לא קיימות כאבנים נפרדות. אות בסוף מילה מוצגת אוטומטית בצורתה הסופית.</li>
         <li><b>שאילתא:</b> אפשר לבדוק בכל רגע אם מילה קיימת במילון, בלי לאבד את התור.</li>
         <li><b>ערעור:</b> אם המילון לא מכיר מילה, אפשר לערער. נגד המחשב הערעור מתקבל תמיד. מול שחקן אחר, הוא מחליט אם לקבל אותה.</li>
+        <li>האותיות של כל שחקן גלויות ליריב: הן מופיעות בכרטיס שלו, ליד הניקוד.</li>
         <li><b>כניעה:</b> אפשר להיכנע בכל רגע במשחק. המשחק נגמר מיד, והיריב מנצח.</li>
         <li>אפשר להחליף אותיות עם השקית או לוותר על התור. המשחק נגמר כשהשקית ריקה ואחד השחקנים השתמש בכל האותיות שלו, או אחרי שני סבבים בלי אף מילה. האותיות שנשארו אצל כל שחקן יורדות מהניקוד שלו.</li>
       </ul>
@@ -1481,12 +1484,18 @@ function render() {
   $('players').innerHTML = s.players.map((p, k) => {
     const tag = G.mode === 'online' ? (G.online.mySeats.includes(k) ? 'את/ה' : (G.online.status === 'waiting' && k === 1 ? 'ממתינים להצטרפות' : 'יריב')) : (p.kind === 'cpu' ? 'מחשב' : '');
     const isCpu = p.kind === 'cpu';
-    const backs = isCpu ? Math.max(0, s.racks[k].length - (G.ghost || []).length) : 0;
+    // the opponent's letters are open for everyone to see (minus any the computer is laying down right now)
+    let oppRack = '';
+    if (k !== viewSeat()) {
+      const letters = s.racks[k].slice();
+      if (isCpu) for (const g of (G.ghost || [])) { const at = letters.indexOf(g.l); if (at >= 0) letters.splice(at, 1); }
+      oppRack = `<div class="opp-rack" aria-label="האותיות של ${esc(p.name)}: ${letters.map(E.CH).join(' ')}">${letters.map(l => `<span class="mini-tile" data-l="${l}">${E.CH(l)}<small>${E.VALUES[l]}</small></span>`).join('') || '<span class="muted">אין אותיות</span>'}</div>`;
+    }
     const thinking = isCpu && G.thinking;
     return `<div class="player${s.turn === k && !s.over ? ' active' : ''}${thinking ? ' thinking' : ''}" data-seat="${k}">
       <div class="name"><span class="turn-dot"></span>${G.online && G.online.hair && G.online.hair[k] ? `<span class="mini-face">${faceSVG('kid', G.online.hair[k])}</span>` : ''}${esc(p.name)}${s.future[k] ? `<span class="lemon" title="הניקוד של המהלך הבא יוכפל">${ICON.future}</span>` : ''}</div>
       <div class="score">${Math.round(shown[k] != null ? shown[k] : s.scores[k])}</div><div class="tag">${thinking ? 'חושב<span class="dots"><i>.</i><i>.</i><i>.</i></span>' : tag}${s.future[k] ? ' · המהלך הבא כפול' : ''}</div>
-      ${isCpu ? `<div class="cpu-rack" aria-label="${backs} אותיות למחשב">${'<i></i>'.repeat(backs)}</div>` : ''}</div>`;
+      ${oppRack}</div>`;
   }).join('') + `<div class="bagline">בשקית: ${s.bag.length} אותיות</div>`;
   const prev = G.prevScores || s.scores;
   s.scores.forEach((v, k) => { if (v > (prev[k] || 0)) { const el = document.querySelector(`#players [data-seat="${k}"] .score`); if (el && !REDUCED) el.classList.add('bump'); } });
@@ -2055,7 +2064,8 @@ const HIT_COLOR = { points: 'var(--x-coin)', future: 'var(--x-time)', extra: 'va
 /* a tile leaves the computer's face-down rack and lands on cell i */
 async function flyTile(l, i) {
   const target = $('board').children[i];
-  const backs = document.querySelectorAll('.player[data-seat="1"] .cpu-rack i');
+  // the tile leaves from its own place in the computer's open rack
+  const backs = [...document.querySelectorAll(`.player[data-seat="1"] .opp-rack .mini-tile[data-l="${l}"]`)].filter(t => t.style.visibility !== 'hidden');
   const from = backs.length ? backs[backs.length - 1] : document.querySelector('.player[data-seat="1"]');
   if (!target || !from || REDUCED) { await sleep(REDUCED ? 250 : 0); return; }
   const a = from.getBoundingClientRect(), b = target.getBoundingClientRect();
