@@ -1625,9 +1625,13 @@ function gEnd(x, y) {
   }
 }
 const firstTouch = e => e.changedTouches[0];
+// Touching the board or rack while a text box (like the word check) still has the cursor would make the
+// phone reopen its keyboard, because we cancel the touch's default handling. Let go of the box first.
+function releaseTextBox() { const a = document.activeElement; if (a && a.matches && a.matches('input, textarea')) a.blur(); }
 document.addEventListener('touchstart', e => {
   if (e.touches.length > 1) { gCancel(); return; }
   const src = gestureSource(e.target); if (!src) return;
+  releaseTextBox();
   if (src.grab || src.k != null) e.preventDefault(); // keep the app from scrolling or selecting text
   const t = firstTouch(e); gStart(t.clientX, t.clientY, src, true);
 }, { passive: false });
@@ -1647,6 +1651,7 @@ document.addEventListener('pointerdown', e => {
   if (HAS_TOUCH && e.pointerType === 'touch') return;
   if (e.button > 0) return;
   const src = gestureSource(e.target); if (!src) return;
+  releaseTextBox();
   if (src.grab) e.preventDefault();
   gStart(e.clientX, e.clientY, src, false);
 });
@@ -2026,7 +2031,7 @@ function miniGame() {
         z.addEventListener('touchstart', e => {
           if (e.touches.length > 1) { mCancel(); return; }
           const t = e.changedTouches[0];
-          if (mStart(t.clientX, t.clientY, e.target, true)) e.preventDefault();
+          if (mStart(t.clientX, t.clientY, e.target, true)) { releaseTextBox(); e.preventDefault(); }
         }, { passive: false });
         z.addEventListener('touchmove', e => { if (!d) return; e.preventDefault(); const t = e.changedTouches[0]; mMove(t.clientX, t.clientY); }, { passive: false });
         z.addEventListener('touchend', e => { if (!d) return; e.preventDefault(); mEnd(); }, { passive: false });
@@ -2184,6 +2189,7 @@ function runCheck() {
   const ok = DICT.has(w);
   res.className = 'check-res ' + (ok ? 'yes' : 'no');
   res.textContent = ok ? `«${E.display(w)}» נמצאת במילון` : `«${E.display(w)}» לא נמצאת במילון`;
+  if (HAS_TOUCH) $('check-word').blur(); // close the phone keyboard so the board is back in view
 }
 $('check-btn').onclick = runCheck;
 $('check-word').addEventListener('keydown', e => { if (e.key === 'Enter') runCheck(); });
