@@ -490,6 +490,16 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
 }
 
 .spam-tip { margin: 10px 0 12px; padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 14%, var(--ground-2)); border-inline-start: 4px solid var(--accent); line-height: 1.55; overflow-wrap: anywhere; }
+
+/* ---------- crossing challenge ---------- */
+.crossgrid { --cg: 46px; display: grid; gap: 4px; direction: rtl; justify-content: center; margin: 4px auto; }
+.crossgrid > * { width: var(--cg); height: calc(var(--cg) * 1.08); }
+.crossgrid .tile { font-size: 26px; }
+.crossgrid .hole { border-radius: 5px; border: 3px dashed var(--accent); animation: hole-pulse 1.2s ease-in-out infinite; }
+@keyframes hole-pulse { 50% { box-shadow: 0 0 12px var(--accent); } }
+.tile.cross-ok { background: var(--x-turn); }
+.tile.cross-miss { background: var(--x-ask); }
+@media (max-width: 420px) { .crossgrid { --cg: 38px; } .crossgrid .tile { font-size: 21px; } }
 </style>
 
 </head>
@@ -602,10 +612,11 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
         <li>אותיות סופיות לא קיימות כאבנים נפרדות. אות בסוף מילה מוצגת אוטומטית בצורתה הסופית.</li>
         <li><b>שאילתא:</b> אפשר לבדוק בכל רגע אם מילה קיימת במילון, בלי לאבד את התור.</li>
         <li><b>ערעור:</b> אם המילון לא מכיר מילה, אפשר לערער. נגד המחשב הערעור מתקבל תמיד. מול שחקן אחר, הוא מחליט אם לקבל אותה.</li>
+        <li><b>כניעה:</b> אפשר להיכנע בכל רגע במשחק. המשחק נגמר מיד, והיריב מנצח.</li>
         <li>אפשר להחליף אותיות עם השקית או לוותר על התור. המשחק נגמר כשהשקית ריקה ואחד השחקנים השתמש בכל האותיות שלו, או אחרי שני סבבים בלי אף מילה. האותיות שנשארו אצל כל שחקן יורדות מהניקוד שלו.</li>
       </ul>
       <h3>משבצות אקסטרה</h3>
-      <p>מסביב ללוח יש שתים־עשרה משבצות אקסטרה. מי שמניח עליהן אות במילה תקינה מקבל את האקסטרה, ואחר כך המשבצת נעלמת. משחקי המילים (סימן שאלה, מפתח ולוח אישי) שמורים לבני אדם: כשהמחשב נוחת עליהם, הוא מקבל אקסטרה מסוג אחר.</p>
+      <p>מסביב ללוח יש שתים־עשרה משבצות אקסטרה. מי שמניח עליהן אות במילה תקינה מקבל את האקסטרה, ואחר כך המשבצת נעלמת. משחקי המילים (הצלבה, מפתח ולוח אישי) שמורים לבני אדם: כשהמחשב נוחת עליהם, הוא מקבל אקסטרה מסוג אחר.</p>
       <div class="legend" id="legend2"></div>
       <h3>ערכי האותיות</h3>
       <div class="values" id="values"></div>
@@ -675,6 +686,7 @@ table.champs { width: 100%; border-collapse: collapse; font-variant-numeric: tab
         <span class="label" id="mode-label"></span>
         <button class="btn ghost sound-toggle icon-btn" type="button"></button>
         <button class="btn ghost" id="game-rules">חוקים</button>
+        <button class="btn ghost" id="game-resign">כניעה</button>
         <button class="btn ghost" id="game-menu">תפריט</button>
       </div>
     </div>
@@ -897,6 +909,12 @@ function exchange(s, who, letters) {
   s.log.unshift({ who, exchange: out.length, pts: 0 });
 }
 function pass(s, who) { s.passes++; s.log.unshift({ who, pass: true, pts: 0 }); }
+// giving up ends the game at once; everyone else wins, and no letters are deducted
+function resign(s, who) {
+  s.over = true; s.resigned = who;
+  s.log.unshift({ who, resign: true, pts: 0 });
+  s.winners = s.players.map((_, k) => k).filter(k => k !== who);
+}
 
 /* end of turn: refill, check game end, rotate turn unless an extra turn was won */
 function endTurn(s, who, extraTurn) {
@@ -1070,7 +1088,7 @@ function pack(s) {
     board: str(s.board), bonus: s.bonus, used: s.used, bag: str(s.bag),
     racks: s.racks.map(str), scores: s.scores, future: s.future, players: s.players,
     turn: s.turn, passes: s.passes, first: s.first, over: s.over, moveNo: s.moveNo,
-    log: s.log.slice(0, 40), last: s.last, winners: s.winners || null,
+    log: s.log.slice(0, 40), last: s.last, winners: s.winners || null, resigned: s.resigned == null ? null : s.resigned,
   };
 }
 function unpack(o) {
@@ -1086,51 +1104,10 @@ function unpack(o) {
 
 const Engine = { ANY, COMMON_WORD, ALPHA, L, CH, VALUES, COUNTS, RACK, N, CENTER, FINAL_OF, BONUS_TYPES, WORD_GAMES,
   Dict, normWord, display, newGame, cellType, playable, evaluate, commit, refill, exchange, pass, endTurn, finish,
-  generateMoves, cpuChoose, pointsBonus, cpuBonusType, pack, unpack, wordAt, isInner, shuffle };
+  generateMoves, cpuChoose, resign, pointsBonus, cpuBonusType, pack, unpack, wordAt, isInner, shuffle };
 
 
-/* Riddles for the strawberry bonus (40 points) and everyday words for the diamond bonus (100 points) */
-const RIDDLES = [
-  ['מה יש לו שיניים ולא נושך?', 'מסרק'],
-  ['מה יש לו עין אחת ולא רואה?', 'מחט'],
-  ['מה נרטב יותר ככל שהוא מייבש?', 'מגבת'],
-  ['מה יש לו צוואר ואין לו ראש?', 'בקבוק'],
-  ['מה גדל ככל שמוציאים ממנו יותר?', 'בור'],
-  ['מה שייך לך, אבל אחרים משתמשים בו יותר ממך?', 'השם שלך'],
-  ['מה עולה ואף פעם לא יורד?', 'הגיל'],
-  ['מה יש לו ארבע רגליים ולא הולך?', 'שולחן'],
-  ['מה נשבר ברגע שאומרים את שמו?', 'שקט'],
-  ['מה יש לו מקשים ולא פותח אף דלת?', 'פסנתר'],
-  ['מה רץ כל הזמן ואין לו רגליים?', 'נהר'],
-  ['מה יש לו ידיים ולא מוחא כפיים?', 'שעון'],
-  ['באיזה חודש יש 28 ימים?', 'בכל החודשים'],
-  ['מה נמצא באמצע הים?', 'האות י'],
-  ['מה ממלא חדר שלם ולא תופס מקום?', 'אור'],
-  ['מה יש לו דפים ואינו עץ?', 'ספר'],
-  ['מה יש לו ראש וזנב ואין לו גוף?', 'מטבע'],
-  ['מי עונה בכל השפות ולא למד אף אחת?', 'הד'],
-  ['לאבא של דני יש שלושה בנים: חיים, משה ו...?', 'דני'],
-  ['מה שחור כשקונים אותו, אדום כשמשתמשים בו ואפור כשזורקים אותו?', 'פחם'],
-  ['מה יש לו הרבה עיניים ולא רואה כלום?', 'תפוח אדמה'],
-  ['מה עולה ויורד ולא זז ממקומו?', 'מדרגות'],
-  ['מה תמיד בדרך ולעולם לא מגיע?', 'מחר'],
-  ['כמה ביצים אפשר לאכול על בטן ריקה?', 'אחת'],
-  ['מה יש לו כתר ואינו מלך?', 'אננס'],
-  ['מה זורח בבוקר ושוקע בערב ולא הולך לישון?', 'השמש'],
-  ['מה עף בלי כנפיים?', 'הזמן'],
-  ['מה שומעים אבל אי אפשר לראות או לגעת?', 'קול'],
-  ['מה ארוך כשהוא צעיר וקצר כשהוא זקן?', 'נר'],
-  ['מה מלא חורים ובכל זאת מחזיק מים?', 'ספוג'],
-  ['מה תמיד רטוב ואף פעם לא מתייבש?', 'הלשון'],
-  ['מה הולך אחריך כל היום ונעלם בחושך?', 'הצל'],
-  ['מה יש לו כובע ואין לו ראש?', 'פטרייה'],
-  ['מה נכנס יבש ויוצא רטוב?', 'שקית תה'],
-  ['מה יורד מהשמיים ולא עולה בחזרה?', 'גשם'],
-  ['מה אפשר להחזיק ביד שמאל ואי אפשר ביד ימין?', 'מרפק ימין'],
-  ['מה יש בכל בית ובכל שבת?', 'האות ב'],
-  ['מה יש לו ארבע עונות ואין לו בגדים?', 'השנה'],
-];
-
+/* Everyday words for the key (missing letter) and crossing extras */
 const COMMON = `שולחן כיסא חלון דלת ספר מחברת עיפרון תפוח בננה ענבים שמש ירח כוכב נהר הר עץ פרח ציפור כלב חתול סוס פרה אריה נמר פיל
 גמל דבורה פרפר נחש דג צב ארנב תרנגול ברווז יונה עכבר כבש עז שועל זאב דוב קוף
 לחם חלב גבינה ביצה מרק סלט עוגה שוקולד תות אבטיח מלון לימון תפוז אגס שזיף רימון תמר זית עגבנייה מלפפון גזר בצל שום תירס אורז
@@ -1171,7 +1148,7 @@ const ICON = {
   points: '<svg viewBox="0 0 24 24"><path d="M4 14v4c0 1.7 3.6 3 8 3s8-1.3 8-3v-4" fill="var(--x-coin-dark)"/><ellipse cx="12" cy="14" rx="8" ry="3" fill="var(--x-coin)"/><path d="M4 8v4c0 1.7 3.6 3 8 3s8-1.3 8-3V8" fill="var(--x-coin-dark)"/><ellipse cx="12" cy="8" rx="8" ry="3" fill="var(--x-coin)"/><path d="M12 6.4v3.2M10.4 8h3.2" stroke="var(--x-coin-dark)" stroke-width="1.4" stroke-linecap="round"/></svg>',
   future: '<svg viewBox="0 0 24 24"><path d="M6 2.5h12M6 21.5h12" stroke="var(--x-frame)" stroke-width="2" stroke-linecap="round"/><path d="M7 3.5h10c0 4-3 6-5 8.5 2 2.5 5 4.5 5 8.5H7c0-4 3-6 5-8.5C10 9.5 7 7.5 7 3.5z" fill="none" stroke="var(--x-frame)" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.6 5h6.8c-.6 2.2-2.2 3.6-3.4 5-1.2-1.4-2.8-2.8-3.4-5z" fill="var(--x-time)"/><path d="M12 15.6l4.1 4.4H7.9z" fill="var(--x-time)"/></svg>',
   extra: '<svg viewBox="0 0 24 24"><path d="M19 12a7 7 0 1 1-2.05-4.95" fill="none" stroke="var(--x-turn)" stroke-width="3" stroke-linecap="round"/><path d="M21 3v7h-7z" fill="var(--x-turn)"/></svg>',
-  riddle: '<svg viewBox="0 0 24 24"><path d="M4 3.5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-5 4v-4H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2z" fill="var(--x-ask)"/><path d="M9.6 8.2a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4" fill="none" stroke="var(--x-ink)" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="15.2" r="1.1" fill="var(--x-ink)"/></svg>',
+  riddle: '<svg viewBox="0 0 24 24"><g fill="var(--x-ask)"><rect x="9" y="1.5" width="6" height="6" rx="1.4"/><rect x="9" y="16.5" width="6" height="6" rx="1.4"/><rect x="1.5" y="9" width="6" height="6" rx="1.4"/><rect x="16.5" y="9" width="6" height="6" rx="1.4"/></g><rect x="8.6" y="8.6" width="6.8" height="6.8" rx="1.5" fill="none" stroke="var(--x-ask)" stroke-width="1.5" stroke-dasharray="2 1.3"/></svg>',
   letter: '<svg viewBox="0 0 24 24"><circle cx="7.5" cy="12" r="5.5" fill="var(--x-key)"/><circle cx="7.5" cy="12" r="2.1" fill="var(--ground)"/><path d="M12.5 10.5H22v3h-2v3.5h-3v-3.5h-4.5z" fill="var(--x-key)"/></svg>',
   mini: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3.5" fill="var(--x-grid)"/><g fill="var(--x-ink)" opacity=".8"><rect x="5" y="5" width="4" height="4" rx=".8"/><rect x="10" y="5" width="4" height="4" rx=".8"/><rect x="10" y="10" width="4" height="4" rx=".8"/><rect x="15" y="10" width="4" height="4" rx=".8"/><rect x="5" y="15" width="4" height="4" rx=".8"/></g><g fill="#fff" opacity=".85"><rect x="15" y="5" width="4" height="4" rx=".8"/><rect x="5" y="10" width="4" height="4" rx=".8"/><rect x="10" y="15" width="4" height="4" rx=".8"/><rect x="15" y="15" width="4" height="4" rx=".8"/></g></svg>',
 };
@@ -1179,7 +1156,7 @@ const BONUS_INFO = {
   points: ['מטבעות', 'נקודות אקסטרה: בין 5 ל־100 נקודות, בהגרלה'],
   future: ['שעון חול', 'הניקוד של המהלך הבא שלך יוכפל'],
   extra: ['חץ חוזר', 'תור נוסף מיד אחרי המהלך'],
-  riddle: ['סימן שאלה', 'חידה: תשובה נכונה שווה 40 נקודות'],
+  riddle: ['הצלבה', 'שתי מילים נפגשות באות חסרה: מצאו אותה ותקבלו 40 נקודות'],
   letter: ['מפתח', 'האות החסרה: מצאו אותה בזמן ותקבלו 100 נקודות'],
   mini: ['לוח אישי', 'לוח קטן משלך לדקה וחצי, וכל מילה שתבנו נספרת'],
 };
@@ -1519,7 +1496,8 @@ function render() {
   $('log').innerHTML = s.log.length ? s.log.map(x => {
     const n = esc(s.players[x.who].name);
     let what;
-    if (x.pass) what = 'דילג'; else if (x.exchange != null) what = `החליף ${x.exchange} אותיות`;
+    if (x.resign) what = 'נכנע/ה';
+    else if (x.pass) what = 'דילג'; else if (x.exchange != null) what = `החליף ${x.exchange} אותיות`;
     else if (x.bonus) what = 'אקסטרה: ' + BONUS_INFO[x.bonus][0] + (x.note ? ' · ' + esc(x.note) : '');
     else what = esc(x.words.join(', ')) + (x.doubled ? ' ×2' : '') + (x.bingo ? ' +50' : '');
     return `<li><span><b>${n}</b>: ${what}</span><span>${x.pts ? '+' + x.pts : ''}</span></li>`;
@@ -1541,6 +1519,7 @@ function render() {
   if (slot.dataset.key !== key) { slot.dataset.key = key; slot.innerHTML = w ? thinkerHTML(w.kind, w.text, false, w.hair) : ''; }
   slot.hidden = !w; $('status').hidden = !!w;
   for (const id of ['act-play', 'act-recall', 'act-shuffle', 'act-swap', 'act-pass']) $(id).disabled = !act;
+  $('game-resign').disabled = !canResign();
   $('act-shuffle').disabled = !rack.length || hide;
   $('act-recall').disabled = !G.temp.length;
   $('act-play').disabled = !act || !G.temp.length;
@@ -1714,6 +1693,27 @@ $('act-hint').onclick = () => {
   toast(`רמז: «${main ? main.word : ''}» · ${ev.score} נקודות. אפשר ללחוץ ״שבץ!״ או ״החזר״`);
 };
 
+function canResign() {
+  const s = G && G.s;
+  if (!s || s.over || G.busy) return false;
+  if (G.mode === 'online') return G.online.status === 'playing' && G.online.mySeats.length > 0;
+  if (G.mode === 'local') return !G.handoff;
+  return true;
+}
+$('game-resign').onclick = async () => {
+  if (!canResign()) return;
+  const s = G.s, g0 = G;
+  const who = G.mode === 'cpu' ? 0 : G.mode === 'local' ? s.turn : G.online.mySeats[0];
+  const other = s.players[who === 0 ? 1 : 0];
+  const r = await modal(`<div class="big">להיכנע?</div>
+    <p class="muted" style="margin:0">${G.mode === 'local' ? esc(s.players[who].name) + ' נכנע/ת, ' : ''}המשחק ייגמר עכשיו, ו${esc(other.name)} ינצח/תנצח.</p>
+    <div class="row"><button class="btn primary" data-close="yes">כן, להיכנע</button><button class="btn ghost" data-close="">ממשיכים לשחק</button></div>`);
+  if (r !== 'yes' || G !== g0 || !canResign()) return;
+  G.temp = []; G.sel = null; G.hinted = null;
+  E.resign(s, who);
+  SFX.play('lose');
+  await turnDone();
+};
 $('act-pass').onclick = async () => {
   if (!canAct()) return;
   const ok = await modal(`<div class="big">לדלג על התור?</div><p class="muted" style="margin:0">לא תקבל/י נקודות בתור הזה.</p>
@@ -1846,7 +1846,7 @@ async function runBonuses(who, bonuses, human) {
       extra = true;
       await modal(`${ICON.extra.replace('<svg', '<svg class="icon"')}<div class="label">חץ חוזר · ${name}</div><div class="big">תור נוסף!</div>
         <div class="row"><button class="btn primary" data-close="1">ממשיכים</button></div>`);
-    } else if (type === 'riddle') pts = await riddleGame();
+    } else if (type === 'riddle') pts = await crossGame();
     else if (type === 'letter') pts = await letterGame();
     else if (type === 'mini') pts = await miniGame();
     G.s.scores[who] += pts;
@@ -1856,26 +1856,55 @@ async function runBonuses(who, bonuses, human) {
   return extra;
 }
 
-function riddleGame() {
-  const [q, a] = RIDDLES[Math.floor(Math.random() * RIDDLES.length)];
-  const wrong = E.shuffle(RIDDLES.filter(r => r[1] !== a).map(r => r[1])).slice(0, 3);
-  const opts = E.shuffle([a, ...wrong]);
-  return modal(`${ICON.riddle.replace('<svg', '<svg class="icon"')}<div class="label">חידה · 40 נקודות · נשארו <span data-secs>30</span> שניות</div>
-    <div class="timer"><i></i></div><div class="big" style="font-size:1.6rem">${esc(q)}</div>
-    <div class="choices">${opts.map(o => `<button class="btn" data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>`,
+// Crossing: a word across and a word down share one square; its letter is hidden. Any letter that makes
+// both into real words counts.
+function crossPair() {
+  const pick = () => COMMON_OK[Math.floor(Math.random() * COMMON_OK.length)];
+  for (let t = 0; t < 600; t++) {
+    const h = pick(), v = pick();
+    if (h === v || h.join() === v.join() || h.length > 6 || v.length > 6) continue;
+    const at = [];
+    h.forEach((l, i) => v.forEach((m, j) => { if (l === m) at.push([i, j]); }));
+    if (!at.length) continue;
+    const [i, j] = at[Math.floor(Math.random() * at.length)];
+    return { h, v, i, j };
+  }
+  return { h: E.normWord('שולחן'), v: E.normWord('כיסא'), i: 3, j: 2 }; // never reached in practice
+}
+function crossGame() {
+  const { h, v, i, j } = crossPair(), answer = h[i], SECS = 25;
+  const glyph = (word, k) => { const ch = E.CH(word[k]); return k === word.length - 1 && E.FINAL_OF[ch] ? E.FINAL_OF[ch] : ch; };
+  const cells = [];
+  for (let r = 0; r < v.length; r++) for (let c = 0; c < h.length; c++) {
+    if (r === j && c === i) cells.push('<div class="hole" id="cross-hole"></div>');
+    else if (r === j) cells.push(tileHTML(h[c], '', glyph(h, c)));
+    else if (c === i) cells.push(tileHTML(v[r], '', glyph(v, r)));
+    else cells.push('<div></div>');
+  }
+  return modal(`${ICON.riddle.replace('<svg', '<svg class="icon"')}<div class="label">הצלבה · 40 נקודות · נשארו <span data-secs>${SECS}</span> שניות</div>
+    <div class="timer"><i></i></div>
+    <p style="margin:0">מילה אחת לרוחב ומילה אחת לאורך נפגשות במשבצת הריקה. איזו אות חסרה שם?</p>
+    <div class="crossgrid" style="grid-template-columns:repeat(${h.length}, var(--cg))">${cells.join('')}</div>
+    <div class="keys">${[...E.ALPHA].map(ch => `<button data-l="${E.L[ch]}">${ch}</button>`).join('')}</div>`,
     (m, close) => {
       let finished = false;
-      const end = async (pick) => {
+      const end = l => {
         if (finished) return; finished = true; stop();
-        m.querySelectorAll('[data-o]').forEach(b => { b.disabled = true; if (b.dataset.o === a) b.classList.add('primary'); });
-        const ok = pick === a; SFX.play(ok ? 'word' : 'bad');
+        const hh = h.slice(), vv = v.slice(); if (l) { hh[i] = l; vv[j] = l; }
+        const ok = !!l && (l === answer || (DICT.has(hh) && DICT.has(vv)));
+        SFX.play(ok ? 'word' : 'bad');
+        const shown = ok ? l : answer;
+        const hole = m.querySelector('#cross-hole');
+        if (hole) hole.outerHTML = tileHTML(shown, ok ? 'cross-ok drop-in' : 'cross-miss drop-in');
+        m.querySelectorAll('.keys button').forEach(b => b.disabled = true);
+        const across = E.display(ok ? hh : h), down = E.display(ok ? vv : v);
         const p = document.createElement('div'); p.className = 'row';
-        p.innerHTML = `<b>${ok ? 'נכון! +40 נקודות' : pick == null ? 'נגמר הזמן. התשובה: ' + esc(a) : 'לא נכון. התשובה: ' + esc(a)}</b><button class="btn primary">המשך</button>`;
+        p.innerHTML = `<b>${ok ? 'מצוין! +40 נקודות' : (l ? 'לא הפעם.' : 'נגמר הזמן.') + ` האות היא ${E.CH(answer)}`}</b><span class="muted">${esc(across)} · ${esc(down)}</span><button class="btn primary">המשך</button>`;
         p.querySelector('button').onclick = () => close(ok ? 40 : 0);
         m.appendChild(p); p.querySelector('button').focus();
       };
-      const stop = timerBar(m, 30, () => end(null));
-      m.querySelector('.choices').onclick = e => { const b = e.target.closest('[data-o]'); if (b) end(b.dataset.o); };
+      const stop = timerBar(m, SECS, () => end(0));
+      m.querySelector('.keys').onclick = e => { const b = e.target.closest('[data-l]'); if (b) end(+b.dataset.l); };
     });
 }
 
@@ -2109,7 +2138,8 @@ async function gameOver() {
   const s = G.s;
   save();
   const w = s.winners || [];
-  const head = w.length > 1 ? 'תיקו!' : `${esc(s.players[w[0]].name)} ניצח/ה!`;
+  const head = s.resigned != null ? `${esc(s.players[s.resigned].name)} נכנע/ה. ${esc(s.players[w[0]].name)} ניצח/ה!`
+    : w.length > 1 ? 'תיקו!' : `${esc(s.players[w[0]].name)} ניצח/ה!`;
   // champions table: human scores from this device
   const champs = store.get('champs', []);
   const modeName = G.mode === 'cpu' ? 'נגד המחשב' : G.mode === 'local' ? 'שני שחקנים' : 'ברשת';
